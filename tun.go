@@ -34,7 +34,6 @@ import (
 
 	"github.com/v2fly/v2ray-core/v5/app/proxyman/inbound"
 	"github.com/v2fly/v2ray-core/v5/common/buf"
-	"github.com/v2fly/v2ray-core/v5/common/bytespool"
 	v2log "github.com/v2fly/v2ray-core/v5/common/log"
 	v2rayNet "github.com/v2fly/v2ray-core/v5/common/net"
 	"github.com/v2fly/v2ray-core/v5/common/session"
@@ -240,19 +239,12 @@ func (t *Tun2ray) NewConnection(source v2rayNet.Destination, destination v2rayNe
 	ctx = session.ContextWithInbound(ctx, ib)
 	ctx = session.ContextWithID(ctx, session.NewID())
 
-	var uid int32
-	var self bool
+	uid := int32(-1)
+	self := false
 	uidDumper, _ := inbound.GetUidDumper()
-
 	if uidDumper != nil && (t.dumpUID || t.trafficStats) {
-		var ipProto int32
-		if destination.Network == v2rayNet.Network_TCP {
-			ipProto = syscall.IPPROTO_TCP
-		} else {
-			ipProto = syscall.IPPROTO_UDP
-		}
 		var err error
-		uid, err = uidDumper.DumpUid(ipProto, source.Address.IP().String(), int32(source.Port), destination.Address.IP().String(), int32(destination.Port))
+		uid, err = uidDumper.DumpUid(syscall.IPPROTO_TCP, source.Address.IP().String(), int32(source.Port), destination.Address.IP().String(), int32(destination.Port))
 		if err == nil {
 			self = int(uid) == os.Getuid()
 			if !self {
@@ -262,8 +254,8 @@ func (t *Tun2ray) NewConnection(source v2rayNet.Destination, destination v2rayNe
 					newError("[TCP (", uid, "/", packageName, ")] ", source.NetAddr(), " ==> ", destination.NetAddr()).AtInfo().WriteToLog(errors.ExportIDToError(ctx))
 				}
 			}
-			ib.UID = uid
 		}
+		ib.UID = uid
 	}
 
 	if !isDns && (t.sniffing || t.fakedns) {
@@ -284,7 +276,7 @@ func (t *Tun2ray) NewConnection(source v2rayNet.Destination, destination v2rayNe
 	}
 
 	var stats *appStats
-	if t.trafficStats && !self && !isDns {
+	if t.trafficStats && !self {
 		if iStats, exists := t.appStats.Load(uid); exists {
 			stats = iStats.(*appStats)
 		} else {
@@ -317,7 +309,7 @@ func (t *Tun2ray) NewConnection(source v2rayNet.Destination, destination v2rayNe
 		conn = &statsConn{conn, &stats.uplink, &stats.downlink}
 	}
 	t.connectionsLock.Lock()
-	element := t.connections.PushBack(conn)
+	elem := t.connections.PushBack(conn)
 	t.connectionsLock.Unlock()
 
 	ctx = v2log.ContextWithAccessMessage(ctx, &v2log.AccessMessage{
@@ -343,45 +335,62 @@ func (t *Tun2ray) NewConnection(source v2rayNet.Destination, destination v2rayNe
 	common.CloseIgnore(conn)
 
 	t.connectionsLock.Lock()
-	t.connections.Remove(element)
+	t.connections.Remove(elem)
 	t.connectionsLock.Unlock()
+}
+
+type packet struct {
+	data        *buf.Buffer
+	destination v2rayNet.Destination
+}
+
+type writeQueue struct {
+	packets chan *packet
+	closed  chan struct{}
+}
+
+func (queue *writeQueue) Close() error {
+	close(queue.closed)
+	close(queue.packets)
+	for packet := range queue.packets {
+		packet.data.Release()
+	}
+	return nil
 }
 
 func (t *Tun2ray) NewPacket(source v2rayNet.Destination, destination v2rayNet.Destination, data *buf.Buffer, writeBack func([]byte, *net.UDPAddr) (int, error)) {
 	natKey := source.NetAddr()
 
-	sendTo := func() bool {
-		iConn, ok := t.udpTable.Load(natKey)
-		if !ok {
-			return false
+	iQueue, ok := t.udpTable.Load(natKey)
+	if ok {
+		queue := iQueue.(*writeQueue)
+		select {
+		case <-queue.closed:
+			data.Release()
+		default:
+			queue.packets <- &packet{
+				data:        data,
+				destination: destination,
+			}
 		}
-		conn := iConn.(net.PacketConn)
-		_, err := conn.WriteTo(data.Bytes(), &net.UDPAddr{
-			IP:   destination.Address.IP(),
-			Port: int(destination.Port),
-		})
-		data.Release()
-		if err != nil {
-			_ = conn.Close()
-		}
-		return true
-	}
-
-	var cond *sync.Cond
-
-	if sendTo() {
 		return
-	} else {
-		iCond, loaded := t.lockTable.LoadOrStore(natKey, sync.NewCond(&sync.Mutex{}))
-		cond = iCond.(*sync.Cond)
-		if loaded {
-			cond.L.Lock()
-			cond.Wait()
-			sendTo()
-			cond.L.Unlock()
-			return
-		}
 	}
+
+	queue := &writeQueue{
+		packets: make(chan *packet, 16),
+		closed:  make(chan struct{}),
+	}
+	queue.packets <- &packet{
+		data:        data,
+		destination: destination,
+	}
+	t.udpTable.Store(natKey, queue)
+
+	go t.newPacket(queue, source, destination, writeBack)
+}
+
+func (t *Tun2ray) newPacket(queue *writeQueue, source v2rayNet.Destination, destination v2rayNet.Destination, writeBack func([]byte, *net.UDPAddr) (int, error)) {
+	natKey := source.NetAddr()
 
 	ib := &session.Inbound{
 		Source:      source,
@@ -397,6 +406,8 @@ func (t *Tun2ray) NewPacket(source v2rayNet.Destination, destination v2rayNet.De
 
 	if isDns {
 		if destination.Port != 53 {
+			t.udpTable.Delete(natKey)
+			queue.Close()
 			return
 		}
 		ib.Tag = "dns-in"
@@ -406,19 +417,12 @@ func (t *Tun2ray) NewPacket(source v2rayNet.Destination, destination v2rayNet.De
 	ctx = session.ContextWithInbound(ctx, ib)
 	ctx = session.ContextWithID(ctx, session.NewID())
 
-	var uid int32
-	var self bool
+	uid := int32(-1)
+	self := false
 	uidDumper, _ := inbound.GetUidDumper()
-
 	if uidDumper != nil && (t.dumpUID || t.trafficStats) {
-		var ipProto int32
-		if destination.Network == v2rayNet.Network_TCP {
-			ipProto = syscall.IPPROTO_TCP
-		} else {
-			ipProto = syscall.IPPROTO_UDP
-		}
 		var err error
-		uid, err = uidDumper.DumpUid(ipProto, source.Address.IP().String(), int32(source.Port), destination.Address.IP().String(), int32(destination.Port))
+		uid, err = uidDumper.DumpUid(syscall.IPPROTO_UDP, source.Address.IP().String(), int32(source.Port), destination.Address.IP().String(), int32(destination.Port))
 		if err == nil {
 			self = int(uid) == os.Getuid()
 			if !self {
@@ -428,8 +432,8 @@ func (t *Tun2ray) NewPacket(source v2rayNet.Destination, destination v2rayNet.De
 					newError("[UDP (", uid, "/", packageName, ")] ", source.NetAddr(), " ==> ", destination.NetAddr()).AtInfo().WriteToLog(errors.ExportIDToError(ctx))
 				}
 			}
-			ib.UID = uid
 		}
+		ib.UID = uid
 	}
 
 	if !isDns && (t.sniffing || t.fakedns) {
@@ -458,11 +462,13 @@ func (t *Tun2ray) NewPacket(source v2rayNet.Destination, destination v2rayNet.De
 	conn, err := t.v2ray.dialUDP(ctx, destination, time.Second*300)
 	if err != nil {
 		newError(err).AtError().WriteToLog(errors.ExportIDToError(ctx))
+		t.udpTable.Delete(natKey)
+		queue.Close()
 		return
 	}
 
 	var stats *appStats
-	if t.trafficStats && !self && !isDns {
+	if t.trafficStats && !self {
 		if iStats, exists := t.appStats.Load(uid); exists {
 			stats = iStats.(*appStats)
 		} else {
@@ -496,39 +502,53 @@ func (t *Tun2ray) NewPacket(source v2rayNet.Destination, destination v2rayNet.De
 	}
 
 	t.connectionsLock.Lock()
-	element := t.connections.PushBack(conn)
+	elem := t.connections.PushBack(conn)
 	t.connectionsLock.Unlock()
 
-	t.udpTable.Store(natKey, conn)
+	go func() {
+		for {
+			packet, ok := <-queue.packets
+			if !ok {
+				return
+			}
+			_, err := conn.WriteTo(packet.data.Bytes(), &net.UDPAddr{
+				IP:   packet.destination.Address.IP(),
+				Port: int(packet.destination.Port),
+			})
+			packet.data.Release()
+			if err != nil {
+				newError(err).AtError().WriteToLog(errors.ExportIDToError(ctx))
+				return
+			}
+		}
+	}()
 
-	go sendTo()
-
-	t.lockTable.Delete(natKey)
-	cond.Broadcast()
-
-	buffer := bytespool.Alloc(t.mtu)
+	buffer := buf.NewWithSize(t.mtu)
 	for {
-		n, addr, err := conn.ReadFrom(buffer)
+		buffer.Clear()
+		buffer.Resize(0, t.mtu)
+		n, addr, err := conn.ReadFrom(buffer.Bytes())
 		if err != nil {
 			break
 		}
-		if isDns {
-			addr = nil
-		}
+		buffer.Resize(0, int32(n))
 		if addr, ok := addr.(*net.UDPAddr); ok {
-			_, err = writeBack(buffer[:n], addr)
+			_, err = writeBack(buffer.Bytes(), addr)
 		} else {
-			_, err = writeBack(buffer[:n], nil)
+			_, err = writeBack(buffer.Bytes(), nil)
 		}
 		if err != nil {
+			newError(err).AtError().WriteToLog(errors.ExportIDToError(ctx))
 			break
 		}
 	}
-	bytespool.Free(buffer)
-	common.CloseIgnore(conn)
-	t.udpTable.Delete(natKey)
+	buffer.Release()
 
+	t.udpTable.Delete(natKey)
+	queue.Close()
+
+	common.CloseIgnore(conn)
 	t.connectionsLock.Lock()
-	t.connections.Remove(element)
+	t.connections.Remove(elem)
 	t.connectionsLock.Unlock()
 }

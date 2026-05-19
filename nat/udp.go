@@ -55,7 +55,7 @@ func (t *SystemTun) processIPv4UDP(cache *buf.Buffer, ipHdr header.IPv4, hdr hea
 	copy(newHeader, ipHdr[:ipHdrLength+header.UDPMinimumSize])
 
 	cache.Advance(int32(ipHdrLength + header.UDPMinimumSize))
-	go t.handler.NewPacket(source, destination, cache, func(bytes []byte, addr *net.UDPAddr) (int, error) {
+	t.handler.NewPacket(source, destination, cache, func(bytes []byte, addr *net.UDPAddr) (int, error) {
 		var newSourceAddress tcpip.Address
 		var newSourcePort uint16
 
@@ -118,7 +118,7 @@ func (t *SystemTun) processIPv6UDP(cache *buf.Buffer, ipHdr header.IPv6, hdr hea
 	copy(newHeader, ipHdr[:ipHdrLength+header.UDPMinimumSize])
 
 	cache.Advance(int32(ipHdrLength + header.UDPMinimumSize))
-	go t.handler.NewPacket(source, destination, cache, func(bytes []byte, addr *v2rayNet.UDPAddr) (int, error) {
+	t.handler.NewPacket(source, destination, cache, func(bytes []byte, addr *v2rayNet.UDPAddr) (int, error) {
 		var newSourceAddress tcpip.Address
 		var newSourcePort uint16
 

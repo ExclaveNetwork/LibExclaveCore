@@ -65,7 +65,7 @@ func gUdpHandler(s *stack.Stack, handler tun.Handler) {
 			IP:   dst.Address.IP(),
 			Port: int(dst.Port),
 		}
-		go handler.NewPacket(src, dst, buf.FromBytes(data), func(bytes []byte, addr *net.UDPAddr) (int, error) {
+		handler.NewPacket(src, dst, buf.FromBytes(data), func(bytes []byte, addr *net.UDPAddr) (int, error) {
 			if addr == nil {
 				addr = destUdpAddr
 			}

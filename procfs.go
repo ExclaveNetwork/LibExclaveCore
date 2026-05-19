@@ -41,7 +41,7 @@ var (
 )
 
 func querySocketUidFromProcFs(ipProto int32, srcIP net.IP, srcPort uint16) int32 {
-	once.Do(Init)
+	once.Do(initOnce)
 	if netIndexOfLocal < 0 || netIndexOfUid < 0 {
 		return -1
 	}
@@ -109,7 +109,7 @@ func nativeEndianIP(ip net.IP) []byte {
 	return result
 }
 
-func Init() {
+func initOnce() {
 	file, err := os.Open("/proc/net/tcp")
 	if err != nil {
 		fmt.Println(err)

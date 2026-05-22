@@ -8,7 +8,7 @@ require (
 	github.com/quic-go/quic-go v0.59.1
 	github.com/v2fly/v2ray-core/v5 v5.50.0
 	golang.org/x/mobile v0.0.0-20260520154334-0e4426e1883d
-	golang.org/x/sys v0.44.0
+	golang.org/x/sys v0.45.0
 	gvisor.dev/gvisor v0.0.0-20250503011706-39ed1f5ac29c
 )
 
@@ -54,10 +54,10 @@ require (
 	github.com/v2fly/struc v0.0.0-20241227015403-8e8fa1badfd6 // indirect
 	github.com/xtaci/smux v1.5.15 // indirect
 	go4.org/netipx v0.0.0-20231129151722-fdeea329fbba // indirect
-	golang.org/x/crypto v0.51.0 // indirect
+	golang.org/x/crypto v0.52.0 // indirect
 	golang.org/x/exp v0.0.0-20250911091902-df9299821621 // indirect
 	golang.org/x/mod v0.36.0 // indirect
-	golang.org/x/net v0.54.0 // indirect
+	golang.org/x/net v0.55.0 // indirect
 	golang.org/x/sync v0.20.0 // indirect
 	golang.org/x/text v0.37.0 // indirect
 	golang.org/x/time v0.12.0 // indirect
@@ -71,7 +71,7 @@ require (
 )
 
 replace (
-	github.com/v2fly/v2ray-core/v5 => github.com/dyhkwong/v2ray-core/v5 v5.50.1-0.20260521114310-2f5468d2e123
+	github.com/v2fly/v2ray-core/v5 => github.com/dyhkwong/v2ray-core/v5 v5.50.1-0.20260522093014-5cecabddc85a
 	// workaround https://github.com/google/gvisor/commit/868dfbce4fd59f03145e2bc5ac0b585917c371fa
 	gvisor.dev/gvisor => gvisor.dev/gvisor v0.0.0-20250429202743-3a608a52255d
 )

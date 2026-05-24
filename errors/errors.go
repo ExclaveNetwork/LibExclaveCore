@@ -29,9 +29,9 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/v2fly/v2ray-core/v5/common/log"
-	"github.com/v2fly/v2ray-core/v5/common/serial"
-	"github.com/v2fly/v2ray-core/v5/common/session"
+	"github.com/exclavenetwork/exclave-core/v5/common/log"
+	"github.com/exclavenetwork/exclave-core/v5/common/serial"
+	"github.com/exclavenetwork/exclave-core/v5/common/session"
 )
 
 type hasSeverity interface {
@@ -57,7 +57,7 @@ func (err *Error) pkgPath() string {
 		return ""
 	}
 	path := reflect.TypeOf(err.pathObj).PkgPath()
-	path = strings.TrimPrefix(path, "github.com/dyhkwong/")
+	path = strings.TrimPrefix(path, "github.com/exclavenetwork/")
 	return path
 }
 

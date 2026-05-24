@@ -21,14 +21,14 @@ import (
 	"net/netip"
 	"os"
 
-	"github.com/v2fly/v2ray-core/v5/common/buf"
+	"github.com/exclavenetwork/exclave-core/v5/common/buf"
 	"golang.org/x/sys/unix"
 	"gvisor.dev/gvisor/pkg/rawfile"
 	"gvisor.dev/gvisor/pkg/tcpip"
 	"gvisor.dev/gvisor/pkg/tcpip/header"
 	"gvisor.dev/gvisor/pkg/tcpip/stack"
 
-	"github.com/dyhkwong/libsagernetcore/tun"
+	"github.com/exclavenetwork/libexclavecore/tun"
 )
 
 //go:generate go run ../errorgen

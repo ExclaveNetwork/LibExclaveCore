@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-package libsagernetcore
+package libexclavecore
 
 type LocalResolver interface {
 	LookupIP(network string, domain string) (string, error)

@@ -24,7 +24,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/v2fly/v2ray-core/v5/common/buf"
+	"github.com/exclavenetwork/exclave-core/v5/common/buf"
 	"gvisor.dev/gvisor/pkg/tcpip"
 	"gvisor.dev/gvisor/pkg/tcpip/header"
 	"gvisor.dev/gvisor/pkg/tcpip/link/fdbased"
@@ -36,7 +36,7 @@ import (
 	"gvisor.dev/gvisor/pkg/tcpip/transport/tcp"
 	"gvisor.dev/gvisor/pkg/tcpip/transport/udp"
 
-	"github.com/dyhkwong/libsagernetcore/tun"
+	"github.com/exclavenetwork/libexclavecore/tun"
 )
 
 //go:generate go run ../errorgen

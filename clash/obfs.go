@@ -19,11 +19,11 @@ package clash
 import (
 	"errors"
 
-	"github.com/v2fly/v2ray-core/v5/common/net"
-	"github.com/v2fly/v2ray-core/v5/proxy/sip003"
-	"github.com/v2fly/v2ray-core/v5/proxy/sip003/self"
+	"github.com/exclavenetwork/exclave-core/v5/common/net"
+	"github.com/exclavenetwork/exclave-core/v5/proxy/sip003"
+	"github.com/exclavenetwork/exclave-core/v5/proxy/sip003/self"
 
-	"github.com/dyhkwong/libsagernetcore/clash/transport/simple-obfs"
+	"github.com/exclavenetwork/libexclavecore/clash/transport/simple-obfs"
 )
 
 var (

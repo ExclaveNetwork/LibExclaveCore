@@ -20,14 +20,14 @@ package gvisor
 import (
 	"time"
 
-	v2rayNet "github.com/v2fly/v2ray-core/v5/common/net"
+	v2rayNet "github.com/exclavenetwork/exclave-core/v5/common/net"
 	"gvisor.dev/gvisor/pkg/tcpip"
 	"gvisor.dev/gvisor/pkg/tcpip/adapters/gonet"
 	"gvisor.dev/gvisor/pkg/tcpip/stack"
 	"gvisor.dev/gvisor/pkg/tcpip/transport/tcp"
 	"gvisor.dev/gvisor/pkg/waiter"
 
-	"github.com/dyhkwong/libsagernetcore/tun"
+	"github.com/exclavenetwork/libexclavecore/tun"
 )
 
 func gTcpHandler(s *stack.Stack, handler tun.Handler) {

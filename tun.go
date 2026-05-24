@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-package libsagernetcore
+package libexclavecore
 
 import (
 	"container/list"
@@ -32,20 +32,20 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/v2fly/v2ray-core/v5/app/proxyman/inbound"
-	"github.com/v2fly/v2ray-core/v5/common/buf"
-	v2log "github.com/v2fly/v2ray-core/v5/common/log"
-	v2rayNet "github.com/v2fly/v2ray-core/v5/common/net"
-	"github.com/v2fly/v2ray-core/v5/common/session"
-	"github.com/v2fly/v2ray-core/v5/common/task"
-	"github.com/v2fly/v2ray-core/v5/features/dns"
-	"github.com/v2fly/v2ray-core/v5/transport/internet"
+	"github.com/exclavenetwork/exclave-core/v5/app/proxyman/inbound"
+	"github.com/exclavenetwork/exclave-core/v5/common/buf"
+	v2log "github.com/exclavenetwork/exclave-core/v5/common/log"
+	v2rayNet "github.com/exclavenetwork/exclave-core/v5/common/net"
+	"github.com/exclavenetwork/exclave-core/v5/common/session"
+	"github.com/exclavenetwork/exclave-core/v5/common/task"
+	"github.com/exclavenetwork/exclave-core/v5/features/dns"
+	"github.com/exclavenetwork/exclave-core/v5/transport/internet"
 
-	"github.com/dyhkwong/libsagernetcore/common"
-	"github.com/dyhkwong/libsagernetcore/errors"
-	"github.com/dyhkwong/libsagernetcore/gvisor"
-	"github.com/dyhkwong/libsagernetcore/nat"
-	"github.com/dyhkwong/libsagernetcore/tun"
+	"github.com/exclavenetwork/libexclavecore/common"
+	"github.com/exclavenetwork/libexclavecore/errors"
+	"github.com/exclavenetwork/libexclavecore/gvisor"
+	"github.com/exclavenetwork/libexclavecore/nat"
+	"github.com/exclavenetwork/libexclavecore/tun"
 )
 
 var _ tun.Handler = (*Tun2ray)(nil)

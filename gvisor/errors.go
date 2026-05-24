@@ -1,7 +1,7 @@
 package gvisor
 
 import (
-	"github.com/dyhkwong/libsagernetcore/errors"
+	"github.com/exclavenetwork/libexclavecore/errors"
 )
 
 type errPathObjHolder struct{}

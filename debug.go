@@ -15,13 +15,13 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-package libsagernetcore
+package libexclavecore
 
 import (
 	"net/http"
 	_ "net/http/pprof"
 
-	"github.com/dyhkwong/libsagernetcore/common"
+	"github.com/exclavenetwork/libexclavecore/common"
 )
 
 type DebugInstance struct {

@@ -24,8 +24,8 @@ import (
 	"math/rand"
 	"net"
 
-	"github.com/dyhkwong/libsagernetcore/clash/common/pool"
-	"github.com/dyhkwong/libsagernetcore/clash/transport/ssr/tools"
+	"github.com/exclavenetwork/libexclavecore/clash/common/pool"
+	"github.com/exclavenetwork/libexclavecore/clash/transport/ssr/tools"
 )
 
 func init() {

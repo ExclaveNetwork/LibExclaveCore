@@ -21,13 +21,13 @@ import (
 	"flag"
 	"strconv"
 
-	"github.com/v2fly/v2ray-core/v5/common/buf"
-	"github.com/v2fly/v2ray-core/v5/common/net"
-	"github.com/v2fly/v2ray-core/v5/common/net/cnc"
-	"github.com/v2fly/v2ray-core/v5/proxy/sip003"
+	"github.com/exclavenetwork/exclave-core/v5/common/buf"
+	"github.com/exclavenetwork/exclave-core/v5/common/net"
+	"github.com/exclavenetwork/exclave-core/v5/common/net/cnc"
+	"github.com/exclavenetwork/exclave-core/v5/proxy/sip003"
 
-	"github.com/dyhkwong/libsagernetcore/clash/transport/ssr/obfs"
-	"github.com/dyhkwong/libsagernetcore/clash/transport/ssr/protocol"
+	"github.com/exclavenetwork/libexclavecore/clash/transport/ssr/obfs"
+	"github.com/exclavenetwork/libexclavecore/clash/transport/ssr/protocol"
 )
 
 var (

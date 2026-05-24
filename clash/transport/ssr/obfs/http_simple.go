@@ -24,7 +24,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/dyhkwong/libsagernetcore/clash/common/pool"
+	"github.com/exclavenetwork/libexclavecore/clash/common/pool"
 )
 
 func init() {

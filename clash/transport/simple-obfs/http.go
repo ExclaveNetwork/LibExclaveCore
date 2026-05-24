@@ -26,7 +26,7 @@ import (
 	"net"
 	"net/http"
 
-	"github.com/dyhkwong/libsagernetcore/clash/common/pool"
+	"github.com/exclavenetwork/libexclavecore/clash/common/pool"
 )
 
 // HTTPObfs is shadowsocks http simple-obfs implementation

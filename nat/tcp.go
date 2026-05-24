@@ -23,13 +23,13 @@ import (
 	"net"
 	"time"
 
-	v2rayNet "github.com/v2fly/v2ray-core/v5/common/net"
+	v2rayNet "github.com/exclavenetwork/exclave-core/v5/common/net"
 	"golang.org/x/sys/unix"
 	"gvisor.dev/gvisor/pkg/tcpip"
 	"gvisor.dev/gvisor/pkg/tcpip/checksum"
 	"gvisor.dev/gvisor/pkg/tcpip/header"
 
-	"github.com/dyhkwong/libsagernetcore/common"
+	"github.com/exclavenetwork/libexclavecore/common"
 )
 
 type tcpForwarder struct {

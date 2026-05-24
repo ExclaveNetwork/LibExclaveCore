@@ -20,7 +20,7 @@ import (
 	"bytes"
 	"net"
 
-	"github.com/dyhkwong/libsagernetcore/clash/common/pool"
+	"github.com/exclavenetwork/libexclavecore/clash/common/pool"
 )
 
 type Conn struct {

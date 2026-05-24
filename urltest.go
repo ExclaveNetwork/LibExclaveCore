@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-package libsagernetcore
+package libexclavecore
 
 import (
 	"context"
@@ -23,8 +23,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/v2fly/v2ray-core/v5/common/net"
-	"github.com/v2fly/v2ray-core/v5/common/session"
+	"github.com/exclavenetwork/exclave-core/v5/common/net"
+	"github.com/exclavenetwork/exclave-core/v5/common/session"
 )
 
 func UrlTest(instance *V2RayInstance, inbound string, link string, timeout int32) (int32, error) {

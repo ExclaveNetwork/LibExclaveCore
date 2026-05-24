@@ -19,7 +19,7 @@ package tools
 import (
 	"encoding/binary"
 
-	"github.com/dyhkwong/libsagernetcore/clash/common/pool"
+	"github.com/exclavenetwork/libexclavecore/clash/common/pool"
 )
 
 // XorShift128Plus - a pseudorandom number generator

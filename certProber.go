@@ -24,7 +24,7 @@ SOFTWARE.
 
 // modified from https://github.com/xchacha20-poly1305/TLS-scribe
 
-package libsagernetcore
+package libexclavecore
 
 import (
 	"context"
@@ -42,9 +42,9 @@ import (
 	"strings"
 	"time"
 
+	v2rayNet "github.com/exclavenetwork/exclave-core/v5/common/net"
+	v2rayTLS "github.com/exclavenetwork/exclave-core/v5/transport/internet/tls"
 	"github.com/quic-go/quic-go"
-	v2rayNet "github.com/v2fly/v2ray-core/v5/common/net"
-	v2rayTLS "github.com/v2fly/v2ray-core/v5/transport/internet/tls"
 )
 
 const (

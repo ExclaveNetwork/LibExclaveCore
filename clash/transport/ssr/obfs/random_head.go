@@ -23,7 +23,7 @@ import (
 	mathRand "math/rand"
 	"net"
 
-	"github.com/dyhkwong/libsagernetcore/clash/common/pool"
+	"github.com/exclavenetwork/libexclavecore/clash/common/pool"
 )
 
 func init() {

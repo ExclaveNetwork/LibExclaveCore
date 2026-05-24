@@ -1,12 +1,12 @@
-module github.com/dyhkwong/libsagernetcore
+module github.com/exclavenetwork/libexclavecore
 
 go 1.26
 
 require (
 	github.com/ccding/go-stun v0.1.5
+	github.com/exclavenetwork/exclave-core/v5 v5.50.1-0.20260524232103-6e4876762cb5
 	github.com/golang/protobuf v1.5.4
 	github.com/quic-go/quic-go v0.59.1
-	github.com/v2fly/v2ray-core/v5 v5.50.0
 	golang.org/x/mobile v0.0.0-20260520154334-0e4426e1883d
 	golang.org/x/sys v0.45.0
 	gvisor.dev/gvisor v0.0.0-20250503011706-39ed1f5ac29c
@@ -21,10 +21,10 @@ require (
 	github.com/apernet/quic-go v0.59.1-0.20260425001925-6c6cc9bcb716 // indirect
 	github.com/dgryski/go-camellia v0.0.0-20191119043421-69a8a13fb23d // indirect
 	github.com/dgryski/go-metro v0.0.0-20200812162917-85c65e2d0165 // indirect
-	github.com/dyhkwong/hysteria/core/v2 v2.8.2-4 // indirect
-	github.com/dyhkwong/hysteria/extras/v2 v2.8.2-4 // indirect
-	github.com/dyhkwong/sing-juicity v0.1.2 // indirect
 	github.com/enfein/mieru/v3 v3.32.0 // indirect
+	github.com/exclavenetwork/hysteria/core/v2 v2.8.2-5 // indirect
+	github.com/exclavenetwork/hysteria/extras/v2 v2.8.2-5 // indirect
+	github.com/exclavenetwork/sing-juicity v0.1.4 // indirect
 	github.com/gofrs/uuid/v5 v5.4.0 // indirect
 	github.com/golang-collections/go-datastructures v0.0.0-20150211160725-59788d5eb259 // indirect
 	github.com/google/btree v1.1.3 // indirect
@@ -60,7 +60,7 @@ require (
 	golang.org/x/net v0.55.0 // indirect
 	golang.org/x/sync v0.20.0 // indirect
 	golang.org/x/text v0.37.0 // indirect
-	golang.org/x/time v0.12.0 // indirect
+	golang.org/x/time v0.10.0 // indirect
 	golang.org/x/tools v0.45.0 // indirect
 	golang.zx2c4.com/wintun v0.0.0-20230126152724-0fa3db229ce2 // indirect
 	golang.zx2c4.com/wireguard v0.0.0-20250521234502-f333402bd9cb // indirect
@@ -70,8 +70,5 @@ require (
 	lukechampine.com/blake3 v1.4.1 // indirect
 )
 
-replace (
-	github.com/v2fly/v2ray-core/v5 => github.com/dyhkwong/v2ray-core/v5 v5.50.1-0.20260522172134-2322a4cd6ba2
-	// workaround https://github.com/google/gvisor/commit/868dfbce4fd59f03145e2bc5ac0b585917c371fa
-	gvisor.dev/gvisor => gvisor.dev/gvisor v0.0.0-20250429202743-3a608a52255d
-)
+// workaround https://github.com/google/gvisor/commit/868dfbce4fd59f03145e2bc5ac0b585917c371fa
+replace gvisor.dev/gvisor => gvisor.dev/gvisor v0.0.0-20250429202743-3a608a52255d

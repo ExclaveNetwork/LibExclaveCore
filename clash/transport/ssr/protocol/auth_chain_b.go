@@ -20,7 +20,7 @@ import (
 	"net"
 	"sort"
 
-	"github.com/dyhkwong/libsagernetcore/clash/transport/ssr/tools"
+	"github.com/exclavenetwork/libexclavecore/clash/transport/ssr/tools"
 )
 
 func init() {

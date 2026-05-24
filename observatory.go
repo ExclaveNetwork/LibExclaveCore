@@ -15,14 +15,14 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-package libsagernetcore
+package libexclavecore
 
 import (
 	"errors"
 
+	"github.com/exclavenetwork/exclave-core/v5/app/observatory"
+	"github.com/exclavenetwork/exclave-core/v5/features/extension"
 	"github.com/golang/protobuf/proto"
-	"github.com/v2fly/v2ray-core/v5/app/observatory"
-	"github.com/v2fly/v2ray-core/v5/features/extension"
 )
 
 func (instance *V2RayInstance) GetObservatoryStatus(tag string) ([]byte, error) {

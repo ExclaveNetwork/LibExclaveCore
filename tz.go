@@ -28,7 +28,7 @@
 
 // source: https://github.com/golang/mobile/blob/574ceaa2f72389603943cbd90e33d324891c8682/app/android.go#L89-L100
 
-package libsagernetcore
+package libexclavecore
 
 // #include <time.h>
 import "C"

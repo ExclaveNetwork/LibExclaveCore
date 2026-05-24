@@ -18,7 +18,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 package common
 
 import (
-	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/exclavenetwork/exclave-core/v5/common"
 )
 
 func CloseIgnore(closer ...interface{}) {

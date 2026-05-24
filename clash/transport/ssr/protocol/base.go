@@ -28,7 +28,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/dyhkwong/libsagernetcore/clash/common/pool"
+	"github.com/exclavenetwork/libexclavecore/clash/common/pool"
 )
 
 type Base struct {

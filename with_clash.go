@@ -17,9 +17,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-package libsagernetcore
+package libexclavecore
 
-import _ "github.com/dyhkwong/libsagernetcore/clash"
+import _ "github.com/exclavenetwork/libexclavecore/clash"
 
 func BuildWithClash() bool {
 	return true

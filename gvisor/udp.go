@@ -22,8 +22,8 @@ import (
 	"math"
 	"net"
 
-	"github.com/v2fly/v2ray-core/v5/common/buf"
-	v2rayNet "github.com/v2fly/v2ray-core/v5/common/net"
+	"github.com/exclavenetwork/exclave-core/v5/common/buf"
+	v2rayNet "github.com/exclavenetwork/exclave-core/v5/common/net"
 	"gvisor.dev/gvisor/pkg/buffer"
 	"gvisor.dev/gvisor/pkg/tcpip"
 	"gvisor.dev/gvisor/pkg/tcpip/checksum"
@@ -31,7 +31,7 @@ import (
 	"gvisor.dev/gvisor/pkg/tcpip/stack"
 	"gvisor.dev/gvisor/pkg/tcpip/transport/udp"
 
-	"github.com/dyhkwong/libsagernetcore/tun"
+	"github.com/exclavenetwork/libexclavecore/tun"
 )
 
 func gUdpHandler(s *stack.Stack, handler tun.Handler) {

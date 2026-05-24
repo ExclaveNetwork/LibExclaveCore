@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-package libsagernetcore
+package libexclavecore
 
 /*
    #cgo LDFLAGS: -landroid -llog
@@ -31,13 +31,13 @@ import (
 	"strings"
 	"unsafe"
 
-	appLog "github.com/v2fly/v2ray-core/v5/app/log"
-	commonLog "github.com/v2fly/v2ray-core/v5/common/log"
+	appLog "github.com/exclavenetwork/exclave-core/v5/app/log"
+	commonLog "github.com/exclavenetwork/exclave-core/v5/common/log"
 )
 
 var (
-	tag      = C.CString("libsagernetcore")
-	tagV2Ray = C.CString("v2ray-core")
+	tag      = C.CString("libexclavecore")
+	tagV2Ray = C.CString("exclave-core")
 )
 
 type v2rayLogWriter struct{}

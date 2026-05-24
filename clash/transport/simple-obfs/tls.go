@@ -24,7 +24,7 @@ import (
 	"net"
 	"time"
 
-	"github.com/dyhkwong/libsagernetcore/clash/common/pool"
+	"github.com/exclavenetwork/libexclavecore/clash/common/pool"
 )
 
 const (

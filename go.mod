@@ -4,7 +4,7 @@ go 1.26
 
 require (
 	github.com/ccding/go-stun v0.1.5
-	github.com/exclavenetwork/exclave-core/v5 v5.50.1-0.20260524232103-6e4876762cb5
+	github.com/exclavenetwork/exclave-core/v5 v5.50.1-0.20260525100537-020e80d9952a
 	github.com/golang/protobuf v1.5.4
 	github.com/quic-go/quic-go v0.59.1
 	golang.org/x/mobile v0.0.0-20260520154334-0e4426e1883d
@@ -22,10 +22,10 @@ require (
 	github.com/dgryski/go-camellia v0.0.0-20191119043421-69a8a13fb23d // indirect
 	github.com/dgryski/go-metro v0.0.0-20200812162917-85c65e2d0165 // indirect
 	github.com/enfein/mieru/v3 v3.32.0 // indirect
-	github.com/exclavenetwork/hysteria/core/v2 v2.8.2-5 // indirect
-	github.com/exclavenetwork/hysteria/extras/v2 v2.8.2-5 // indirect
+	github.com/exclavenetwork/hysteria/core/v2 v2.9.2-1 // indirect
+	github.com/exclavenetwork/hysteria/extras/v2 v2.9.2-1 // indirect
 	github.com/exclavenetwork/sing-juicity v0.1.4 // indirect
-	github.com/gofrs/uuid/v5 v5.4.0 // indirect
+	github.com/gofrs/uuid/v5 v5.3.2 // indirect
 	github.com/golang-collections/go-datastructures v0.0.0-20150211160725-59788d5eb259 // indirect
 	github.com/google/btree v1.1.3 // indirect
 	github.com/gorilla/websocket v1.5.3 // indirect

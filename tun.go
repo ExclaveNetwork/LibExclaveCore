@@ -66,7 +66,9 @@ type Tun2ray struct {
 	trafficStats bool
 	pcap         bool
 
-	udpTable  sync.Map
+	udpTableMu sync.Mutex
+	udpTable   map[string]*writeQueue
+
 	appStats  sync.Map
 	lockTable sync.Map
 
@@ -204,8 +206,8 @@ func (t *Tun2ray) Close() error {
 	internet.UseAlternativeSystemDialer(nil)
 	common.CloseIgnore(t.dev)
 	t.connectionsLock.Lock()
-	for elem := t.connections.Front(); elem != nil; elem = elem.Next() {
-		cancel := elem.Value.(context.CancelFunc)
+	for item := t.connections.Front(); item != nil; item = item.Next() {
+		cancel := item.Value.(context.CancelFunc)
 		cancel()
 	}
 	t.connectionsLock.Unlock()
@@ -352,44 +354,29 @@ type writeQueue struct {
 	closed  chan struct{}
 }
 
-func (queue *writeQueue) Close() error {
-	close(queue.closed)
-	close(queue.packets)
-	for packet := range queue.packets {
-		packet.data.Release()
-	}
-	return nil
-}
-
 func (t *Tun2ray) NewPacket(source v2rayNet.Destination, destination v2rayNet.Destination, data *buf.Buffer, writeBack func([]byte, *net.UDPAddr) (int, error)) {
 	natKey := source.NetAddr()
 
-	iQueue, ok := t.udpTable.Load(natKey)
-	if ok {
-		queue := iQueue.(*writeQueue)
-		select {
-		case <-queue.closed:
-			data.Release()
-		default:
-			queue.packets <- &packet{
-				data:        data,
-				destination: destination,
-			}
+	t.udpTableMu.Lock()
+	queue, loaded := t.udpTable[natKey]
+	if !loaded {
+		queue := &writeQueue{
+			packets: make(chan *packet, 16),
+			closed:  make(chan struct{}),
 		}
-		return
+		t.udpTable[natKey] = queue
 	}
+	t.udpTableMu.Unlock()
 
-	queue := &writeQueue{
-		packets: make(chan *packet, 16),
-		closed:  make(chan struct{}),
-	}
-	queue.packets <- &packet{
+	select {
+	case <-queue.closed:
+		data.Release()
+	case queue.packets <- &packet{
 		data:        data,
 		destination: destination,
+	}:
+		go t.newPacket(queue, source, destination, writeBack)
 	}
-	t.udpTable.Store(natKey, queue)
-
-	go t.newPacket(queue, source, destination, writeBack)
 }
 
 func (t *Tun2ray) newPacket(queue *writeQueue, source v2rayNet.Destination, destination v2rayNet.Destination, writeBack func([]byte, *net.UDPAddr) (int, error)) {
@@ -409,8 +396,10 @@ func (t *Tun2ray) newPacket(queue *writeQueue, source v2rayNet.Destination, dest
 
 	if isDns {
 		if destination.Port != 53 {
-			t.udpTable.Delete(natKey)
-			queue.Close()
+			t.udpTableMu.Lock()
+			delete(t.udpTable, natKey)
+			t.udpTableMu.Unlock()
+			close(queue.closed)
 			return
 		}
 		ib.Tag = "dns-in"
@@ -471,8 +460,10 @@ func (t *Tun2ray) newPacket(queue *writeQueue, source v2rayNet.Destination, dest
 	conn, err := t.v2ray.dialUDP(ctx, destination, time.Second*300)
 	if err != nil {
 		newError(err).AtError().WriteToLog(errors.ExportIDToError(ctx))
-		t.udpTable.Delete(natKey)
-		queue.Close()
+		t.udpTableMu.Lock()
+		delete(t.udpTable, natKey)
+		t.udpTableMu.Unlock()
+		close(queue.closed)
 		return
 	}
 
@@ -512,17 +503,21 @@ func (t *Tun2ray) newPacket(queue *writeQueue, source v2rayNet.Destination, dest
 
 	go func() {
 		for {
-			packet, ok := <-queue.packets
-			if !ok {
+			select {
+			case <-queue.closed:
+				for packet := range queue.packets {
+					packet.data.Release()
+				}
 				return
-			}
-			_, err := conn.WriteTo(packet.data.Bytes(), &net.UDPAddr{
-				IP:   packet.destination.Address.IP(),
-				Port: int(packet.destination.Port),
-			})
-			packet.data.Release()
-			if err != nil {
-				return
+			case packet := <-queue.packets:
+				_, err := conn.WriteTo(packet.data.Bytes(), &net.UDPAddr{
+					IP:   packet.destination.Address.IP(),
+					Port: int(packet.destination.Port),
+				})
+				packet.data.Release()
+				if err != nil {
+					return
+				}
 			}
 		}
 	}()
@@ -547,8 +542,10 @@ func (t *Tun2ray) newPacket(queue *writeQueue, source v2rayNet.Destination, dest
 	}
 	buffer.Release()
 
-	t.udpTable.Delete(natKey)
-	queue.Close()
+	t.udpTableMu.Lock()
+	delete(t.udpTable, natKey)
+	t.udpTableMu.Unlock()
+	close(queue.closed)
 
 	t.connectionsLock.Lock()
 	t.connections.Remove(elem)

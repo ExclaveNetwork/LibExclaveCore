@@ -204,8 +204,9 @@ func (t *Tun2ray) Close() error {
 	internet.UseAlternativeSystemDialer(nil)
 	common.CloseIgnore(t.dev)
 	t.connectionsLock.Lock()
-	for item := t.connections.Front(); item != nil; item = item.Next() {
-		common.CloseIgnore(item.Value)
+	for elem := t.connections.Front(); elem != nil; elem = elem.Next() {
+		cancel := elem.Value.(context.CancelFunc)
+		cancel()
 	}
 	t.connectionsLock.Unlock()
 	if t.protectServer != nil {
@@ -308,8 +309,11 @@ func (t *Tun2ray) NewConnection(source v2rayNet.Destination, destination v2rayNe
 		}()
 		conn = &statsConn{conn, &stats.uplink, &stats.downlink}
 	}
+
+	var cancel context.CancelFunc
+	ctx, cancel = context.WithCancel(ctx)
 	t.connectionsLock.Lock()
-	elem := t.connections.PushBack(conn)
+	elem := t.connections.PushBack(cancel)
 	t.connectionsLock.Unlock()
 
 	ctx = v2log.ContextWithAccessMessage(ctx, &v2log.AccessMessage{
@@ -332,11 +336,10 @@ func (t *Tun2ray) NewConnection(source v2rayNet.Destination, destination v2rayNe
 		return io.EOF
 	})
 
-	common.CloseIgnore(conn)
-
 	t.connectionsLock.Lock()
 	t.connections.Remove(elem)
 	t.connectionsLock.Unlock()
+	common.CloseIgnore(conn)
 }
 
 type packet struct {
@@ -459,6 +462,12 @@ func (t *Tun2ray) newPacket(queue *writeQueue, source v2rayNet.Destination, dest
 		Status: v2log.AccessAccepted,
 	})
 
+	var cancel context.CancelFunc
+	ctx, cancel = context.WithCancel(ctx)
+	t.connectionsLock.Lock()
+	elem := t.connections.PushBack(cancel)
+	t.connectionsLock.Unlock()
+
 	conn, err := t.v2ray.dialUDP(ctx, destination, time.Second*300)
 	if err != nil {
 		newError(err).AtError().WriteToLog(errors.ExportIDToError(ctx))
@@ -501,10 +510,6 @@ func (t *Tun2ray) newPacket(queue *writeQueue, source v2rayNet.Destination, dest
 		conn = &statsPacketConn{conn, &stats.uplink, &stats.downlink}
 	}
 
-	t.connectionsLock.Lock()
-	elem := t.connections.PushBack(conn)
-	t.connectionsLock.Unlock()
-
 	go func() {
 		for {
 			packet, ok := <-queue.packets
@@ -517,7 +522,6 @@ func (t *Tun2ray) newPacket(queue *writeQueue, source v2rayNet.Destination, dest
 			})
 			packet.data.Release()
 			if err != nil {
-				newError(err).AtError().WriteToLog(errors.ExportIDToError(ctx))
 				return
 			}
 		}
@@ -538,7 +542,6 @@ func (t *Tun2ray) newPacket(queue *writeQueue, source v2rayNet.Destination, dest
 			_, err = writeBack(buffer.Bytes(), nil)
 		}
 		if err != nil {
-			newError(err).AtError().WriteToLog(errors.ExportIDToError(ctx))
 			break
 		}
 	}
@@ -547,8 +550,8 @@ func (t *Tun2ray) newPacket(queue *writeQueue, source v2rayNet.Destination, dest
 	t.udpTable.Delete(natKey)
 	queue.Close()
 
-	common.CloseIgnore(conn)
 	t.connectionsLock.Lock()
 	t.connections.Remove(elem)
 	t.connectionsLock.Unlock()
+	common.CloseIgnore(conn)
 }

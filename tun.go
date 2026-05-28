@@ -366,6 +366,7 @@ func (t *Tun2ray) NewPacket(source v2rayNet.Destination, destination v2rayNet.De
 			closed:  make(chan struct{}),
 		}
 		t.udpTable[natKey] = queue
+		go t.newPacket(queue, source, destination, writeBack)
 	}
 	t.udpTableMu.Unlock()
 
@@ -376,7 +377,6 @@ func (t *Tun2ray) NewPacket(source v2rayNet.Destination, destination v2rayNet.De
 		data:        data,
 		destination: destination,
 	}:
-		go t.newPacket(queue, source, destination, writeBack)
 	}
 }
 

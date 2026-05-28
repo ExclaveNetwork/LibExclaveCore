@@ -119,6 +119,7 @@ func NewTun2ray(config *TunConfig) (*Tun2ray, error) {
 		fakedns:             config.FakeDNS,
 		dumpUID:             config.DumpUID,
 		trafficStats:        config.TrafficStats,
+		udpTable:            make(map[string]*writeQueue),
 	}
 	if len(config.Dns6) > 0 {
 		t.dns6 = netip.MustParseAddr(config.Dns6)
@@ -360,7 +361,7 @@ func (t *Tun2ray) NewPacket(source v2rayNet.Destination, destination v2rayNet.De
 	t.udpTableMu.Lock()
 	queue, loaded := t.udpTable[natKey]
 	if !loaded {
-		queue := &writeQueue{
+		queue = &writeQueue{
 			packets: make(chan *packet, 16),
 			closed:  make(chan struct{}),
 		}

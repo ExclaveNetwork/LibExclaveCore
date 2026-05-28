@@ -4,7 +4,7 @@ go 1.26
 
 require (
 	github.com/ccding/go-stun v0.1.5
-	github.com/exclavenetwork/exclave-core/v5 v5.50.1-0.20260525100537-020e80d9952a
+	github.com/exclavenetwork/exclave-core/v5 v5.50.1-0.20260528105021-68916a18d8d0
 	github.com/golang/protobuf v1.5.4
 	github.com/quic-go/quic-go v0.59.1
 	golang.org/x/mobile v0.0.0-20260520154334-0e4426e1883d

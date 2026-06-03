@@ -3,6 +3,7 @@ module github.com/exclavenetwork/libexclavecore
 go 1.26
 
 require (
+	filippo.io/age v1.3.1
 	github.com/ccding/go-stun v0.1.5
 	github.com/exclavenetwork/exclave-core/v5 v5.50.1-0.20260531141753-e9720c7c2d53
 	github.com/golang/protobuf v1.5.4
@@ -13,6 +14,7 @@ require (
 )
 
 require (
+	filippo.io/hpke v0.4.0 // indirect
 	filippo.io/mldsa v0.0.0-20260215214346-43d0283efc3e // indirect
 	github.com/adrg/xdg v0.5.3 // indirect
 	github.com/aead/chacha20 v0.0.0-20180709150244-8b13a72661da // indirect

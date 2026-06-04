@@ -8,7 +8,7 @@ require (
 	github.com/exclavenetwork/exclave-core/v5 v5.50.1-0.20260604150212-2802a473b01c
 	github.com/golang/protobuf v1.5.4
 	github.com/quic-go/quic-go v0.59.1
-	golang.org/x/mobile v0.0.0-20260529142300-ecb4cd65260a
+	golang.org/x/mobile v0.0.0-20260602190626-68735029466e
 	golang.org/x/sys v0.45.0
 	gvisor.dev/gvisor v0.0.0-20250503011706-39ed1f5ac29c
 )

@@ -5,7 +5,7 @@ go 1.26
 require (
 	filippo.io/age v1.3.1
 	github.com/ccding/go-stun v0.1.5
-	github.com/exclavenetwork/exclave-core/v5 v5.50.1-0.20260617165752-07a14882390e
+	github.com/exclavenetwork/exclave-core/v5 v5.50.1-0.20260617165752-77b00051a618
 	github.com/golang/protobuf v1.5.4
 	github.com/quic-go/quic-go v0.60.0
 	golang.org/x/mobile v0.0.0-20260611195102-4dd8f1dbf5d2
@@ -47,7 +47,6 @@ require (
 	github.com/sagernet/sing-quic v0.6.1 // indirect
 	github.com/sagernet/sing-shadowsocks v0.2.9 // indirect
 	github.com/sagernet/sing-shadowsocks2 v0.2.2 // indirect
-	github.com/sagernet/sing-shadowtls v0.2.1 // indirect
 	github.com/sagernet/smux v1.5.50-sing-box-mod.1 // indirect
 	github.com/seiflotfy/cuckoofilter v0.0.0-20240715131351-a2f2c23f1771 // indirect
 	github.com/v2fly/BrowserBridge v0.0.0-20210430233438-0570fc1d7d08 // indirect

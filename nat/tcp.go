@@ -24,7 +24,6 @@ import (
 	"time"
 
 	v2rayNet "github.com/exclavenetwork/exclave-core/v5/common/net"
-	"golang.org/x/sys/unix"
 	"gvisor.dev/gvisor/pkg/tcpip"
 	"gvisor.dev/gvisor/pkg/tcpip/checksum"
 	"gvisor.dev/gvisor/pkg/tcpip/header"
@@ -33,12 +32,10 @@ import (
 )
 
 type tcpForwarder struct {
-	tun       *SystemTun
-	port4     uint16
-	port6     uint16
-	listener4 *net.TCPListener
-	listener6 *net.TCPListener
-	sessions  *common.LruCache
+	tun      *SystemTun
+	port     uint16
+	listener *net.TCPListener
+	sessions *common.LruCache
 }
 
 func newTcpForwarder(tun *SystemTun) (*tcpForwarder, error) {
@@ -48,45 +45,19 @@ func newTcpForwarder(tun *SystemTun) (*tcpForwarder, error) {
 	}
 	listenerConfig := &net.ListenConfig{}
 	listenerConfig.SetMultipathTCP(false)
-	address := &net.TCPAddr{
-		IP: tun.addr4.AsSlice(),
+	network := "tcp"
+	if !tun.enableIPv6 {
+		network = "tcp4"
 	}
-	var err error
-	var listener4 net.Listener
-	for i := 0; i < 3; i++ {
-		listener4, err = listenerConfig.Listen(context.Background(), "tcp4", address.String())
-		if err == nil || !errors.Is(err, unix.EADDRNOTAVAIL) {
-			break
-		}
-		time.Sleep(time.Millisecond * 100)
-	}
+	// IDK why but listening on 0.0.0.0 or :: rather than tun.addr4 or tun.addr6 fixes https://github.com/ExclaveNetwork/Exclave/issues/427.
+	// See also https://github.com/Kr328/tun2socket/blob/dddbfaa28112d4eb1ab6a9ce0435d7f602da20d8/nat/nat.go#L20.
+	listener, err := listenerConfig.Listen(context.Background(), network, ":0")
 	if err != nil {
 		return nil, err
 	}
-	tcpForwarder.listener4 = listener4.(*net.TCPListener)
-	tcpForwarder.port4 = uint16(listener4.Addr().(*net.TCPAddr).Port)
-	newError("tcp forwarder started at ", listener4.Addr().(*net.TCPAddr)).AtInfo().WriteToLog()
-	if tun.enableIPv6 {
-		address := &net.TCPAddr{
-			IP: tun.addr6.AsSlice(),
-		}
-		// IDK why IPv6 sometimes reports "bind: cannot assign requested address". IPv4 is not affected.
-		// See https://github.com/SagerNet/sing-tun/commit/07278fb4705b933b0471d77dc80d8d62f5704ccd.
-		var listener6 net.Listener
-		for i := 0; i < 3; i++ {
-			listener6, err = listenerConfig.Listen(context.Background(), "tcp6", address.String())
-			if err == nil || !errors.Is(err, unix.EADDRNOTAVAIL) {
-				break
-			}
-			time.Sleep(time.Millisecond * 100)
-		}
-		if err != nil {
-			return nil, err
-		}
-		tcpForwarder.listener6 = listener6.(*net.TCPListener)
-		tcpForwarder.port6 = uint16(listener6.Addr().(*net.TCPAddr).Port)
-		newError("tcp forwarder started at ", listener6.Addr().(*net.TCPAddr)).AtInfo().WriteToLog()
-	}
+	tcpForwarder.listener = listener.(*net.TCPListener)
+	tcpForwarder.port = uint16(listener.Addr().(*net.TCPAddr).Port)
+	newError("tcp forwarder started at ", listener.Addr().(*net.TCPAddr)).AtInfo().WriteToLog()
 	return tcpForwarder, nil
 }
 
@@ -96,9 +67,18 @@ func (t *tcpForwarder) dispatch(listener *net.TCPListener) error {
 		return err
 	}
 	addr := conn.RemoteAddr().(*net.TCPAddr)
-	key := peerKey{tcpip.AddrFromSlice(addr.IP), uint16(addr.Port)}
+	var ip net.IP
+	if ip4 := addr.IP.To4(); ip4 != nil {
+		ip = ip4
+	} else {
+		ip = addr.IP
+	}
+	key := peerKey{
+		destinationAddress: tcpip.AddrFromSlice(ip),
+		sourcePort:         uint16(addr.Port),
+	}
 	var session *peerValue
-	iSession, ok := t.sessions.Get(peerKey{key.destinationAddress, key.sourcePort})
+	iSession, ok := t.sessions.Get(key)
 	if ok {
 		session = iSession.(*peerValue)
 	} else {
@@ -146,8 +126,11 @@ func (t *tcpForwarder) processIPv4(ipHdr header.IPv4, tcpHdr header.TCP) {
 
 	var session *peerValue
 
-	if sourcePort != t.port4 {
-		key := peerKey{destinationAddress, sourcePort}
+	if sourcePort != t.port {
+		key := peerKey{
+			destinationAddress: destinationAddress,
+			sourcePort:         sourcePort,
+		}
 		iSession, ok := t.sessions.Get(key)
 		if ok {
 			session = iSession.(*peerValue)
@@ -157,9 +140,13 @@ func (t *tcpForwarder) processIPv4(ipHdr header.IPv4, tcpHdr header.TCP) {
 		}
 		ipHdr.SetSourceAddress(destinationAddress)
 		ipHdr.SetDestinationAddress(tcpip.AddrFrom4(t.tun.addr4.As4()))
-		tcpHdr.SetDestinationPort(t.port4)
+		tcpHdr.SetDestinationPort(t.port)
 	} else {
-		iSession, ok := t.sessions.Get(peerKey{destinationAddress, destinationPort})
+		key := peerKey{
+			destinationAddress: destinationAddress,
+			sourcePort:         destinationPort,
+		}
+		iSession, ok := t.sessions.Get(key)
 		if ok {
 			session = iSession.(*peerValue)
 		} else {
@@ -190,22 +177,31 @@ func (t *tcpForwarder) processIPv6(ipHdr header.IPv6, tcpHdr header.TCP) {
 
 	var session *peerValue
 
-	if sourcePort != t.port6 {
-		key := peerKey{destinationAddress, sourcePort}
+	if sourcePort != t.port {
+		key := peerKey{
+			destinationAddress: destinationAddress,
+			sourcePort:         destinationPort,
+		}
 		iSession, ok := t.sessions.Get(key)
 		if ok {
 			session = iSession.(*peerValue)
 		} else {
-			session = &peerValue{sourceAddress, destinationPort}
+			session = &peerValue{
+				sourceAddress:   sourceAddress,
+				destinationPort: destinationPort,
+			}
 			t.sessions.Set(key, session)
 		}
 
 		ipHdr.SetSourceAddress(destinationAddress)
 		ipHdr.SetDestinationAddress(tcpip.AddrFrom16(t.tun.addr6.As16()))
-		tcpHdr.SetDestinationPort(t.port6)
+		tcpHdr.SetDestinationPort(t.port)
 	} else {
-
-		iSession, ok := t.sessions.Get(peerKey{destinationAddress, destinationPort})
+		key := peerKey{
+			destinationAddress: destinationAddress,
+			sourcePort:         destinationPort,
+		}
+		iSession, ok := t.sessions.Get(key)
 		if ok {
 			session = iSession.(*peerValue)
 		} else {
@@ -228,9 +224,6 @@ func (t *tcpForwarder) processIPv6(ipHdr header.IPv6, tcpHdr header.TCP) {
 }
 
 func (t *tcpForwarder) Close() error {
-	_ = t.listener4.Close()
-	if t.listener6 != nil {
-		_ = t.listener6.Close()
-	}
+	_ = t.listener.Close()
 	return nil
 }

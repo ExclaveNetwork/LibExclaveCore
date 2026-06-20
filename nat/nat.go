@@ -63,10 +63,7 @@ func New(dev int32, mtu int32, handler tun.Handler, addr4, addr6 netip.Addr, ena
 		return nil, err
 	}
 	t.tcpForwarder = tcpServer
-	go tcpServer.dispatchLoop(tcpServer.listener4)
-	if t.enableIPv6 {
-		go tcpServer.dispatchLoop(tcpServer.listener6)
-	}
+	go tcpServer.dispatchLoop(tcpServer.listener)
 
 	go t.dispatchLoop()
 	return t, nil

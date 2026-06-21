@@ -36,8 +36,8 @@ import (
 var _ tun.Tun = (*SystemTun)(nil)
 
 type SystemTun struct {
-	dev          int
-	mtu          int
+	dev          int32
+	mtu          int32
 	handler      tun.Handler
 	addr4        netip.Addr
 	addr6        netip.Addr
@@ -47,10 +47,10 @@ type SystemTun struct {
 	tcpForwarder *tcpForwarder
 }
 
-func New(dev int32, mtu int32, handler tun.Handler, addr4, addr6 netip.Addr, enableIPv6, discardICMP bool, discardIPv6 func() bool) (*SystemTun, error) {
+func New(dev, mtu int32, handler tun.Handler, addr4, addr6 netip.Addr, enableIPv6, discardICMP bool, discardIPv6 func() bool) (*SystemTun, error) {
 	t := &SystemTun{
-		dev:         int(dev),
-		mtu:         int(mtu),
+		dev:         dev,
+		mtu:         mtu,
 		handler:     handler,
 		addr4:       addr4,
 		addr6:       addr6,
@@ -58,19 +58,17 @@ func New(dev int32, mtu int32, handler tun.Handler, addr4, addr6 netip.Addr, ena
 		discardIPv6: discardIPv6,
 		discardICMP: discardICMP,
 	}
-	tcpServer, err := newTcpForwarder(t)
+	tcpForwarder, err := newTCPForwarder(t)
 	if err != nil {
 		return nil, err
 	}
-	t.tcpForwarder = tcpServer
-	go tcpServer.dispatchLoop(tcpServer.listener)
-
+	t.tcpForwarder = tcpForwarder
 	go t.dispatchLoop()
 	return t, nil
 }
 
 func (t *SystemTun) dispatchLoop() {
-	cache := buf.NewWithSize(int32(t.mtu))
+	cache := buf.NewWithSize(t.mtu)
 	defer func() {
 		cache.Release()
 	}()
@@ -87,7 +85,7 @@ func (t *SystemTun) dispatchLoop() {
 		cache.Resize(0, int32(n))
 		packet := data[:n]
 		if t.deliverPacket(cache, packet) {
-			cache = buf.NewWithSize(int32(t.mtu))
+			cache = buf.NewWithSize(t.mtu)
 			data = cache.Extend(cache.Cap())
 		}
 	}
@@ -99,14 +97,14 @@ func (t *SystemTun) writeRawPacket(pkt *stack.PacketBuffer) tcpip.Error {
 	for i, v := range views {
 		iovecs[i] = rawfile.IovecFromBytes(v)
 	}
-	if errno := rawfile.NonBlockingWriteIovec(t.dev, iovecs); errno != 0 {
+	if errno := rawfile.NonBlockingWriteIovec(int(t.dev), iovecs); errno != 0 {
 		return tcpip.TranslateErrno(errno)
 	}
 	return nil
 }
 
 func (t *SystemTun) writeBuffer(bytes []byte) tcpip.Error {
-	if errno := rawfile.NonBlockingWrite(t.dev, bytes); errno != 0 {
+	if errno := rawfile.NonBlockingWrite(int(t.dev), bytes); errno != 0 {
 		return tcpip.TranslateErrno(errno)
 	}
 	return nil

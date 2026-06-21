@@ -37,12 +37,12 @@ type tcpForwarder struct {
 	addr6     netip.Addr
 	addr6Next netip.Addr
 	port      uint16
-	listener  *net.TCPListener
+	listener  net.Listener
 	tcpNAT    *tcpNAT
 	cancel    context.CancelFunc
 }
 
-func newTcpForwarder(tun *SystemTun) (*tcpForwarder, error) {
+func newTCPForwarder(tun *SystemTun) (*tcpForwarder, error) {
 	if !tun.addr4.Next().IsValid() || !tun.addr6.Next().IsValid() {
 		return nil, newError("tun cidr not large enough")
 	}
@@ -58,23 +58,26 @@ func newTcpForwarder(tun *SystemTun) (*tcpForwarder, error) {
 	if err != nil {
 		return nil, err
 	}
+	addr := listener.Addr().(*net.TCPAddr)
+	newError("tcp forwarder started at ", addr).AtInfo().WriteToLog()
 	ctx, cancel := context.WithCancel(context.Background())
-	newError("tcp forwarder started at ", listener.Addr().(*net.TCPAddr)).AtInfo().WriteToLog()
-	return &tcpForwarder{
+	tcpForwarder := &tcpForwarder{
 		tun:       tun,
 		addr4:     tun.addr4,
 		addr4Next: tun.addr4.Next(),
 		addr6:     tun.addr6,
 		addr6Next: tun.addr6.Next(),
-		port:      uint16(listener.Addr().(*net.TCPAddr).Port),
+		port:      uint16(addr.Port),
 		tcpNAT:    newTCPNAT(ctx, time.Second*300),
-		listener:  listener.(*net.TCPListener),
+		listener:  listener,
 		cancel:    cancel,
-	}, nil
+	}
+	go tcpForwarder.dispatchLoop(listener)
+	return tcpForwarder, nil
 }
 
-func (t *tcpForwarder) dispatch(listener *net.TCPListener) error {
-	conn, err := listener.AcceptTCP()
+func (t *tcpForwarder) dispatch(listener net.Listener) error {
+	conn, err := listener.Accept()
 	if err != nil {
 		return err
 	}
@@ -116,7 +119,7 @@ func (t *tcpForwarder) dispatch(listener *net.TCPListener) error {
 	return nil
 }
 
-func (t *tcpForwarder) dispatchLoop(listener *net.TCPListener) {
+func (t *tcpForwarder) dispatchLoop(listener net.Listener) {
 	for {
 		if err := t.dispatch(listener); err != nil {
 			if !errors.Is(err, net.ErrClosed) {

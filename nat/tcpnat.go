@@ -46,14 +46,14 @@ type session struct {
 }
 
 func newTCPNAT(ctx context.Context, timeout time.Duration) *tcpNAT {
-	tcpNat := &tcpNAT{
+	tcpNAT := &tcpNAT{
 		timeout:   timeout,
 		portIndex: 10000,
 		addrMap:   make(map[natKey]uint16),
 		portMap:   make(map[uint16]*session),
 	}
-	go tcpNat.loopCheckTimeout(ctx)
-	return tcpNat
+	go tcpNAT.loopCheckTimeout(ctx)
+	return tcpNAT
 }
 
 func (n *tcpNAT) loopCheckTimeout(ctx context.Context) {

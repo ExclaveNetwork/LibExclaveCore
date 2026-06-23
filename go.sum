@@ -65,8 +65,8 @@ github.com/dgryski/go-metro v0.0.0-20200812162917-85c65e2d0165/go.mod h1:c9O8+fp
 github.com/dgryski/go-sip13 v0.0.0-20181026042036-e10d5fee7954/go.mod h1:vAd38F8PWV+bWy6jNmig1y/TA+kYO4g3RSRF0IAv0no=
 github.com/enfein/mieru/v3 v3.34.0 h1:8yeaPORvfSQtdfEH+Arw9wttDyFxkik8My4zFdGu79Y=
 github.com/enfein/mieru/v3 v3.34.0/go.mod h1:zJBUCsi5rxyvHM8fjFf+GLaEl4OEjjBXr1s5F6Qd3hM=
-github.com/exclavenetwork/exclave-core/v5 v5.50.1-0.20260620094504-4b66222415bd h1:9WjHc8jNFFfXSya5JjCwkPOhPVB3mxCegAHkWYZgxLQ=
-github.com/exclavenetwork/exclave-core/v5 v5.50.1-0.20260620094504-4b66222415bd/go.mod h1:iFNEQeiaNloR7CgdmNCH1zHpuRvp/DEOTtsINO5TEoc=
+github.com/exclavenetwork/exclave-core/v5 v5.50.1-0.20260623075140-5c1ede468da4 h1:k50ksQFeYb6f4/Cg4ld2jI4OAO9lGJKUtiSeS4jTUC4=
+github.com/exclavenetwork/exclave-core/v5 v5.50.1-0.20260623075140-5c1ede468da4/go.mod h1:iFNEQeiaNloR7CgdmNCH1zHpuRvp/DEOTtsINO5TEoc=
 github.com/exclavenetwork/hysteria/core/v2 v2.9.2-1 h1:5hLS8B3kfQAnHnd3ovOUE75gNV8JOe96x5xI7qidU0U=
 github.com/exclavenetwork/hysteria/core/v2 v2.9.2-1/go.mod h1:Tc8xxjEwzxae8KfMHJhwAkk30sovWjSb+ssslEhg6O4=
 github.com/exclavenetwork/hysteria/extras/v2 v2.9.2-1 h1:YCoF9cbCqQcVYoU5Pgsp5yddNsb97PKxtMLDwAsgDs8=

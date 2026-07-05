@@ -26,7 +26,6 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
-	"strings"
 	"sync"
 	"sync/atomic"
 	"syscall"
@@ -38,7 +37,6 @@ import (
 	v2rayNet "github.com/exclavenetwork/exclave-core/v5/common/net"
 	"github.com/exclavenetwork/exclave-core/v5/common/session"
 	"github.com/exclavenetwork/exclave-core/v5/common/task"
-	"github.com/exclavenetwork/exclave-core/v5/features/dns"
 	"github.com/exclavenetwork/exclave-core/v5/transport/internet"
 
 	"github.com/exclavenetwork/libexclavecore/common"
@@ -104,7 +102,7 @@ type TunConfig struct {
 }
 
 func NewTun2ray(config *TunConfig) (*Tun2ray, error) {
-	if config.V2Ray.localResolver == nil {
+	if config.V2Ray.resolver == nil {
 		panic("localResolver not set")
 	}
 
@@ -166,38 +164,9 @@ func NewTun2ray(config *TunConfig) (*Tun2ray, error) {
 		t.protectServer = protectServer(config.ProtectPath, config.Protector)
 	}
 
-	lookupFunc := func(network, host string) ([]net.IP, error) {
-		response, err := config.V2Ray.localResolver.LookupIP(network, host)
-		if err != nil {
-			errStr := err.Error()
-			if strings.HasPrefix(errStr, "rcode") {
-				r, _ := strconv.Atoi(strings.Split(errStr, " ")[1])
-				return nil, dns.RCodeError(r)
-			}
-			return nil, err
-		}
-		if response == "" {
-			return nil, dns.ErrEmptyResponse
-		}
-		addrs := strings.Split(response, ",")
-		ips := make([]net.IP, len(addrs))
-		for i, addr := range addrs {
-			ip := net.ParseIP(addr)
-			if ip.To4() != nil {
-				ip = ip.To4()
-			}
-			ips[i] = ip
-		}
-		if len(ips) == 0 {
-			return nil, dns.ErrEmptyResponse
-		}
-		return ips, nil
-	}
 	internet.UseAlternativeSystemDialer(&protectedDialer{
 		protector: config.Protector,
-		resolver: func(domain string) ([]net.IP, error) {
-			return lookupFunc("ip", domain)
-		},
+		resolver:  config.V2Ray.resolver,
 	})
 
 	return t, nil

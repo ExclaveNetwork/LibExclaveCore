@@ -22,14 +22,13 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"reflect"
 	"runtime"
 	"runtime/debug"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
-	"unsafe"
+	_ "unsafe"
 
 	core "github.com/exclavenetwork/exclave-core/v5"
 	"github.com/exclavenetwork/exclave-core/v5/common"
@@ -70,25 +69,37 @@ func GetV2RayVersion() string {
 	return core.Version()
 }
 
+type protector struct {
+	path string
+}
+
+func (p *protector) Protect(fd int32) bool {
+	err := protect(p.path, uintptr(fd))
+	if err != nil {
+		newError("protect failed").Base(err).AtError().WriteToLog()
+		return false
+	}
+	return true
+}
+
 type V2RayInstance struct {
-	started       bool
-	closed        bool
-	core          *core.Instance
-	dispatcher    routing.Dispatcher
-	statsManager  stats.Manager
-	observatory   features.TaggedFeatures
-	localResolver LocalResolver
+	started      bool
+	closed       bool
+	core         *core.Instance
+	dispatcher   routing.Dispatcher
+	statsManager stats.Manager
+	observatory  features.TaggedFeatures
+	resolver     func(domain string) ([]net.IP, error)
 }
 
 func (instance *V2RayInstance) WithLocalResolver(localResolver LocalResolver) {
 	if localResolver == nil {
-		instance.localResolver = nil
+		instance.resolver = nil
 		localdns.SetLookupFunc(nil)
 		localdns.SetRawQueryFunc(nil)
 		return
 	}
-	instance.localResolver = localResolver
-	localdns.SetLookupFunc(func(network, host string) ([]net.IP, error) {
+	lookupFunc := func(network, host string) ([]net.IP, error) {
 		response, err := localResolver.LookupIP(network, host)
 		if err != nil {
 			errStr := err.Error()
@@ -114,7 +125,11 @@ func (instance *V2RayInstance) WithLocalResolver(localResolver LocalResolver) {
 			return nil, dns.ErrEmptyResponse
 		}
 		return ips, nil
-	})
+	}
+	instance.resolver = func(domain string) ([]net.IP, error) {
+		return lookupFunc("ip", domain)
+	}
+	localdns.SetLookupFunc(lookupFunc)
 	if localResolver.SupportExchange() {
 		localdns.SetRawQueryFunc(func(b []byte) ([]byte, error) {
 			return localResolver.Exchange(b)
@@ -122,26 +137,29 @@ func (instance *V2RayInstance) WithLocalResolver(localResolver LocalResolver) {
 	}
 }
 
-func (instance *V2RayInstance) WithProtect(path string) {
+func (instance *V2RayInstance) WithAlternativeSystemDialer(protectPath string) {
+	if instance.resolver == nil {
+		panic("localResolver not set")
+	}
 	systemDialerMutex.Lock()
 	defer systemDialerMutex.Unlock()
-	if len(path) == 0 {
+	if len(protectPath) == 0 {
 		if systemDialer == nil {
-			systemDialer = &internet.DefaultSystemDialer{}
+			systemDialer = &protectedDialer{
+				protector: &noopProtector{},
+				resolver:  instance.resolver,
+			}
 		}
 		internet.UseAlternativeSystemDialer(systemDialer)
-		return
-	}
-	if systemDialerWithProtect == nil {
-		systemDialerWithProtect = &internet.DefaultSystemDialer{}
-		controller := func(_, _ string, fd uintptr) error {
-			return protect(path, fd)
+	} else {
+		if systemDialerWithProtect == nil {
+			systemDialerWithProtect = &protectedDialer{
+				protector: &protector{path: protectPath},
+				resolver:  instance.resolver,
+			}
 		}
-		// TODO: export internet.DefaultSystemDialer.controllers to avoid reflect
-		ptr := (*[]func(string, string, uintptr) error)(unsafe.Pointer(reflect.ValueOf(systemDialerWithProtect).Elem().FieldByName("controllers").UnsafeAddr()))
-		*ptr = []func(string, string, uintptr) error{controller}
+		internet.UseAlternativeSystemDialer(systemDialerWithProtect)
 	}
-	internet.UseAlternativeSystemDialer(systemDialerWithProtect)
 }
 
 func (instance *V2RayInstance) LoadConfig(content string) error {

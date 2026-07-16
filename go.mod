@@ -5,7 +5,7 @@ go 1.26
 require (
 	filippo.io/age v1.3.1
 	github.com/ccding/go-stun v0.1.5
-	github.com/exclavenetwork/exclave-core/v5 v5.50.1-0.20260713162429-841d73ec0d29
+	github.com/exclavenetwork/exclave-core/v5 v5.50.1-0.20260716085203-57cc29ba9368
 	github.com/golang/protobuf v1.5.4
 	github.com/quic-go/quic-go v0.60.0
 	golang.org/x/mobile v0.0.0-20260709172247-6129f5bee9d5
@@ -66,7 +66,7 @@ require (
 	golang.zx2c4.com/wintun v0.0.0-20230126152724-0fa3db229ce2 // indirect
 	golang.zx2c4.com/wireguard v0.0.0-20260522210424-ecfc5a8d5446 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260414002931-afd174a4e478 // indirect
-	google.golang.org/grpc v1.82.0 // indirect
+	google.golang.org/grpc v1.82.1 // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
 	lukechampine.com/blake3 v1.4.1 // indirect
 )

@@ -44,23 +44,23 @@ type v2rayLogWriter struct{}
 
 func (w *v2rayLogWriter) Write(s string) error {
 	var priority C.int
-	if strings.Contains(s, "[Debug]") {
-		s = strings.Replace(s, "[Debug]", "", 1)
+	if strings.HasPrefix(s, "[Debug] ") {
+		s = strings.Replace(s, "[Debug] ", "", 1)
 		priority = C.ANDROID_LOG_DEBUG
-	} else if strings.Contains(s, "[Info]") {
-		s = strings.Replace(s, "[Info]", "", 1)
+	} else if strings.HasPrefix(s, "[Info] ") {
+		s = strings.Replace(s, "[Info] ", "", 1)
 		priority = C.ANDROID_LOG_INFO
-	} else if strings.Contains(s, "[Warning]") {
-		s = strings.Replace(s, "[Warning]", "", 1)
+	} else if strings.HasPrefix(s, "[Warning] ") {
+		s = strings.Replace(s, "[Warning] ", "", 1)
 		priority = C.ANDROID_LOG_WARN
-	} else if strings.Contains(s, "[Error]") {
-		s = strings.Replace(s, "[Error]", "", 1)
+	} else if strings.HasPrefix(s, "[Error] ") {
+		s = strings.Replace(s, "[Error] ", "", 1)
 		priority = C.ANDROID_LOG_ERROR
 	} else {
 		priority = C.ANDROID_LOG_DEBUG
 	}
 
-	str := C.CString(strings.TrimSpace(s))
+	str := C.CString(strings.Replace(s, "\u0000", "\\0", -1))
 	C.__android_log_write(priority, tagV2Ray, str)
 	C.free(unsafe.Pointer(str))
 	return nil
@@ -73,7 +73,7 @@ func (w *v2rayLogWriter) Close() error {
 type stdLogWriter struct{}
 
 func (stdLogWriter) Write(p []byte) (n int, err error) {
-	str := C.CString(string(p))
+	str := C.CString(strings.Replace(string(p), "\u0000", "\\0", -1))
 	C.__android_log_write(C.ANDROID_LOG_INFO, tag, str)
 	C.free(unsafe.Pointer(str))
 	return len(p), nil

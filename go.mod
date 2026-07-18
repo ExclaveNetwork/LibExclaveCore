@@ -5,7 +5,7 @@ go 1.26
 require (
 	filippo.io/age v1.3.1
 	github.com/ccding/go-stun v0.1.5
-	github.com/exclavenetwork/exclave-core/v5 v5.50.1-0.20260716085203-57cc29ba9368
+	github.com/exclavenetwork/exclave-core/v5 v5.50.1-0.20260718092345-3cdf5523b8a1
 	github.com/golang/protobuf v1.5.4
 	github.com/quic-go/quic-go v0.60.0
 	golang.org/x/mobile v0.0.0-20260709172247-6129f5bee9d5
@@ -19,7 +19,7 @@ require (
 	github.com/adrg/xdg v0.5.3 // indirect
 	github.com/aead/chacha20 v0.0.0-20180709150244-8b13a72661da // indirect
 	github.com/andybalholm/brotli v1.0.6 // indirect
-	github.com/anytls/sing-anytls v0.0.11 // indirect
+	github.com/anytls/sing-anytls v0.0.13 // indirect
 	github.com/apernet/quic-go v0.60.1-0.20260618182935-599b15a1fa26 // indirect
 	github.com/dgryski/go-camellia v0.0.0-20191119043421-69a8a13fb23d // indirect
 	github.com/dgryski/go-metro v0.0.0-20200812162917-85c65e2d0165 // indirect

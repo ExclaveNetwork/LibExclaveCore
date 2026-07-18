@@ -232,7 +232,7 @@ func CalculatePEMCertPublicKeySHA256Hash(input string) (string, error) {
 }
 
 func CalculatePEMCertChainSHA256Hash(input string) (string, error) {
-	return v2rayTLS.CalculatePEMCertChainSHA256Hash([]byte(input)), nil
+	return v2rayTLS.CalculatePEMCertChainSHA256Hash([]byte(input))
 }
 
 func CertificateToPrettyInfo(input string) (string, error) {

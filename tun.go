@@ -214,6 +214,7 @@ func (t *Tun2ray) NewConnection(source v2rayNet.Destination, destination v2rayNe
 
 	uid := int32(-1)
 	self := false
+	hasUID := false
 	uidDumper, _ := inbound.GetUidDumper()
 	if uidDumper != nil && (t.dumpUID || t.trafficStats) {
 		var err error
@@ -228,7 +229,8 @@ func (t *Tun2ray) NewConnection(source v2rayNet.Destination, destination v2rayNe
 				}
 			}
 		}
-		ib.UID = uid
+		ib.UID = &uid
+		hasUID = true
 	}
 
 	if !isDns && (t.sniffing || t.fakedns) {
@@ -249,7 +251,7 @@ func (t *Tun2ray) NewConnection(source v2rayNet.Destination, destination v2rayNe
 	}
 
 	var stats *appStats
-	if t.trafficStats && !self {
+	if hasUID && t.trafficStats && !self {
 		if iStats, exists := t.appStats.Load(uid); exists {
 			stats = iStats.(*appStats)
 		} else {
@@ -381,6 +383,7 @@ func (t *Tun2ray) newPacket(queue *writeQueue, source v2rayNet.Destination, dest
 
 	uid := int32(-1)
 	self := false
+	hasUID := false
 	uidDumper, _ := inbound.GetUidDumper()
 	if uidDumper != nil && (t.dumpUID || t.trafficStats) {
 		var err error
@@ -395,7 +398,8 @@ func (t *Tun2ray) newPacket(queue *writeQueue, source v2rayNet.Destination, dest
 				}
 			}
 		}
-		ib.UID = uid
+		ib.UID = &uid
+		hasUID = true
 	}
 
 	if !isDns && (t.sniffing || t.fakedns) {
@@ -438,7 +442,7 @@ func (t *Tun2ray) newPacket(queue *writeQueue, source v2rayNet.Destination, dest
 	}
 
 	var stats *appStats
-	if t.trafficStats && !self {
+	if hasUID && t.trafficStats && !self {
 		if iStats, exists := t.appStats.Load(uid); exists {
 			stats = iStats.(*appStats)
 		} else {

@@ -72,6 +72,13 @@ func (c *ipcConn) Write(b []byte) (int, error) {
 	return c.Conn.Write(b)
 }
 
+func (c *ipcConn) RemoteAddr() net.Addr {
+	return &net.TCPAddr{
+		IP:   c.dest.Address.IP(),
+		Port: int(c.dest.Port),
+	}
+}
+
 func newIPCPacketConn(conn net.Conn, dest v2rayNet.Destination) *ipcPacketConn {
 	return &ipcPacketConn{
 		ipcConn: newIPCConn(conn, dest),
@@ -80,7 +87,7 @@ func newIPCPacketConn(conn net.Conn, dest v2rayNet.Destination) *ipcPacketConn {
 
 type ipcPacketConn struct {
 	*ipcConn
-	alwaysNetUDPAddr bool // always use net.UDPAddr
+	noDomainResponse bool
 }
 
 func (c *ipcPacketConn) ReadFrom(p []byte) (int, net.Addr, error) {
@@ -104,7 +111,7 @@ func (c *ipcPacketConn) ReadFrom(p []byte) (int, net.Addr, error) {
 			Port: int(port),
 		}, nil
 	}
-	if addr.Family().IsDomain() && c.alwaysNetUDPAddr {
+	if addr.Family().IsDomain() && c.noDomainResponse {
 		return 0, nil, os.ErrInvalid
 	}
 	return length, &udpAddr{

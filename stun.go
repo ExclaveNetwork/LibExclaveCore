@@ -69,7 +69,7 @@ func (c *stunClient) UseUDS(path string) {
 			return nil, err
 		}
 		packetConn := newIPCPacketConn(unixConn, dest)
-		packetConn.alwaysNetUDPAddr = true
+		packetConn.noDomainResponse = true
 		return packetConn, nil
 	}
 	c.dialer = func(ctx context.Context, network, address string) (net.Conn, error) {
@@ -77,7 +77,6 @@ func (c *stunClient) UseUDS(path string) {
 		if err != nil {
 			return nil, err
 		}
-		dialer := new(net.Dialer)
 		unixConn, err := dialer.DialContext(ctx, "unix", path)
 		if err != nil {
 			return nil, err

@@ -23,6 +23,8 @@ import (
 	"strconv"
 	"strings"
 	_ "unsafe"
+
+	"github.com/exclavenetwork/exclave-core/v5/common/errors"
 )
 
 type URL interface {
@@ -30,12 +32,17 @@ type URL interface {
 	SetScheme(scheme string)
 	GetOpaque() string
 	SetOpaque(opaque string)
+	GetUserInfo() string
+	SetUsernamePassword(username, password string)
+	HasUsername() bool
 	GetUsername() string
 	SetUsername(username string)
+	HasPassword() bool
 	GetPassword() string
-	SetPassword(password string) error
+	SetPassword(password string)
 	GetHost() string
 	SetHost(host string)
+	HasPort() bool
 	GetPort() int32
 	SetHostPort(host string, port int32)
 	SetRawHost(host string)
@@ -46,12 +53,15 @@ type URL interface {
 	SetRawPath(rawPath string) error
 	GetRawQuery() string
 	SetRawQuery(rawPath string)
+	CountQueryParameters() int
 	HasQueryParameter(key string) bool
 	CountQueryParameter(key string) int
 	GetQueryParameter(key string) string
 	GetQueryParameterAt(key string, i int) string
 	AddQueryParameter(key, value string)
+	SetQueryParameter(key, value string)
 	DeleteQueryParameter(key string)
+	QueryParameters() *QueryParameters
 	GetFragment() string
 	SetFragment(fragment string)
 	GetRawFragment() string
@@ -84,6 +94,13 @@ func ParseURL(rawURL string) (URL, error) {
 	if err != nil {
 		return nil, err
 	}
+	if strings.Contains(u.Hostname(), ":") && !IsIPv6(u.Hostname()) {
+		// https://github.com/golang/go/issues/75223
+		// https://github.com/golang/go/issues/75859
+		// https://github.com/golang/go/issues/78077
+		// https://github.com/golang/go/issues/78945
+		return nil, errors.New("non-IPv6 hostname contains colons")
+	}
 	return &netURL{URL: u}, nil
 }
 
@@ -101,6 +118,24 @@ func (u *netURL) GetOpaque() string {
 
 func (u *netURL) SetOpaque(opaque string) {
 	u.Opaque = opaque
+}
+
+func (u *netURL) GetUserInfo() string {
+	if u.User != nil {
+		return u.User.String()
+	}
+	return ""
+}
+
+func (u *netURL) SetUsernamePassword(username, password string) {
+	u.User = url.UserPassword(username, password)
+}
+
+func (u *netURL) HasUsername() bool {
+	if u.User != nil {
+		return true
+	}
+	return false
 }
 
 func (u *netURL) GetUsername() string {
@@ -122,6 +157,14 @@ func (u *netURL) SetUsername(username string) {
 	}
 }
 
+func (u *netURL) HasPassword() bool {
+	if u.User == nil {
+		return false
+	}
+	_, passwordSet := u.User.Password()
+	return passwordSet
+}
+
 func (u *netURL) GetPassword() string {
 	if u.User != nil {
 		if password, ok := u.User.Password(); ok {
@@ -131,12 +174,11 @@ func (u *netURL) GetPassword() string {
 	return ""
 }
 
-func (u *netURL) SetPassword(password string) error {
+func (u *netURL) SetPassword(password string) {
 	if u.User == nil {
 		u.User = url.UserPassword("", password)
 	}
 	u.User = url.UserPassword(u.User.Username(), password)
-	return nil
 }
 
 func (u *netURL) GetHost() string {
@@ -150,6 +192,11 @@ func (u *netURL) SetHost(host string) {
 	} else {
 		u.Host = host
 	}
+}
+
+func (u *netURL) HasPort() bool {
+	_, portStr, err := net.SplitHostPort(u.Host)
+	return err == nil && len(portStr) > 0
 }
 
 func (u *netURL) GetPort() int32 {
@@ -201,6 +248,10 @@ func (u *netURL) SetRawQuery(rawQuery string) {
 	u.RawQuery = rawQuery
 }
 
+func (u *netURL) CountQueryParameters() int {
+	return len(u.Query())
+}
+
 func (u *netURL) HasQueryParameter(key string) bool {
 	return u.Query().Has(key)
 }
@@ -210,24 +261,22 @@ func (u *netURL) GetQueryParameter(key string) string {
 }
 
 func (u *netURL) CountQueryParameter(key string) int {
-	queries := u.Query()
-	v, ok := queries[key]
+	value, ok := u.Query()[key]
 	if !ok {
 		return 0
 	}
-	return len(v)
+	return len(value)
 }
 
 func (u *netURL) GetQueryParameterAt(key string, i int) string {
-	queries := u.Query()
-	v, ok := queries[key]
+	value, ok := u.Query()[key]
 	if !ok {
 		return ""
 	}
-	if i < 0 || i >= len(v) {
+	if i < 0 || i >= len(value) {
 		return ""
 	}
-	return v[i]
+	return value[i]
 }
 
 func (u *netURL) AddQueryParameter(key, value string) {
@@ -236,10 +285,46 @@ func (u *netURL) AddQueryParameter(key, value string) {
 	u.RawQuery = queries.Encode()
 }
 
+func (u *netURL) SetQueryParameter(key, value string) {
+	queries := u.Query()
+	queries.Set(key, value)
+	u.RawQuery = queries.Encode()
+}
+
 func (u *netURL) DeleteQueryParameter(key string) {
 	queries := u.Query()
 	queries.Del(key)
 	u.RawQuery = queries.Encode()
+}
+
+type QueryParameters struct {
+	size   int
+	keys   []string
+	values []string
+}
+
+func (q *QueryParameters) Size() int {
+	return q.size
+}
+
+func (q *QueryParameters) GetKeyAt(i int) string {
+	return q.keys[i]
+}
+
+func (q *QueryParameters) GetValueAt(i int) string {
+	return q.values[i]
+}
+
+func (u *netURL) QueryParameters() *QueryParameters {
+	queryParameters := new(QueryParameters)
+	for key, values := range u.Query() {
+		for _, value := range values {
+			queryParameters.size++
+			queryParameters.keys = append(queryParameters.keys, key)
+			queryParameters.values = append(queryParameters.values, value)
+		}
+	}
+	return queryParameters
 }
 
 func (u *netURL) SetFragment(fragment string) {

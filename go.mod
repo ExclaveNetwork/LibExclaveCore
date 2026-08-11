@@ -5,7 +5,7 @@ go 1.26
 require (
 	filippo.io/age v1.3.1
 	github.com/exclavenetwork/exclave-core/v5 v5.50.1-0.20260808051351-527078356a31
-	github.com/exclavenetwork/go-stun v0.1.7-0.20260811065140-e59c7343ea64
+	github.com/exclavenetwork/go-stun v0.1.7-0.20260811120819-d09f4628f065
 	github.com/golang/protobuf v1.5.4
 	github.com/quic-go/quic-go v0.61.0
 	golang.org/x/mobile v0.0.0-20260803200217-62cee1672c8e

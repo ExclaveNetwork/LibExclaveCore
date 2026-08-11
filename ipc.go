@@ -73,10 +73,10 @@ func (c *ipcConn) Write(b []byte) (int, error) {
 }
 
 func (c *ipcConn) RemoteAddr() net.Addr {
-	return &net.TCPAddr{
-		IP:   c.dest.Address.IP(),
-		Port: int(c.dest.Port),
+	if c.dest.Address.Family().IsIP() {
+		return &net.TCPAddr{IP: c.dest.Address.IP(), Port: int(c.dest.Port)}
 	}
+	return &net.TCPAddr{IP: net.IPv4zero, Port: int(c.dest.Port)}
 }
 
 func newIPCPacketConn(conn net.Conn, dest v2rayNet.Destination) *ipcPacketConn {

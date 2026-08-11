@@ -20,7 +20,6 @@ package libexclavecore
 import (
 	"context"
 	"net"
-	"net/netip"
 
 	"github.com/exclavenetwork/go-stun/stun"
 
@@ -39,32 +38,28 @@ type STUNClient interface {
 var _ STUNClient = (*stunClient)(nil)
 
 type stunClient struct {
-	resolver *net.Resolver
-	listener func(ctx context.Context, network, address string) (net.PacketConn, error)
-	dialer   func(ctx context.Context, network, address string) (net.Conn, error)
+	resolve   *net.Resolver
+	listenUDP func(ctx context.Context, dest v2rayNet.Destination) (net.PacketConn, error)
+	dialTCP   func(ctx context.Context, dest v2rayNet.Destination) (net.Conn, error)
 }
 
 func NewStunClient() STUNClient {
 	listener := new(net.ListenConfig)
 	dialer := new(net.Dialer)
 	return &stunClient{
-		resolver: new(net.Resolver),
-		listener: func(ctx context.Context, network, address string) (net.PacketConn, error) {
-			return listener.ListenPacket(ctx, network, "[::]:0")
+		resolve: new(net.Resolver),
+		listenUDP: func(ctx context.Context, _ v2rayNet.Destination) (net.PacketConn, error) {
+			return listener.ListenPacket(ctx, "udp", "[::]:0")
 		},
-		dialer: func(ctx context.Context, network, address string) (net.Conn, error) {
-			return dialer.DialContext(ctx, network, address)
+		dialTCP: func(ctx context.Context, dest v2rayNet.Destination) (net.Conn, error) {
+			return dialer.DialContext(ctx, "tcp", dest.NetAddr())
 		},
 	}
 }
 
 func (c *stunClient) UseUDS(path string) {
 	dialer := new(net.Dialer)
-	c.listener = func(ctx context.Context, network, address string) (net.PacketConn, error) {
-		dest, err := v2rayNet.ParseDestination(network + ":" + address)
-		if err != nil {
-			return nil, err
-		}
+	c.listenUDP = func(ctx context.Context, dest v2rayNet.Destination) (net.PacketConn, error) {
 		unixConn, err := dialer.DialContext(ctx, "unix", path)
 		if err != nil {
 			return nil, err
@@ -73,11 +68,7 @@ func (c *stunClient) UseUDS(path string) {
 		packetConn.noDomainResponse = true
 		return packetConn, nil
 	}
-	c.dialer = func(ctx context.Context, network, address string) (net.Conn, error) {
-		dest, err := v2rayNet.ParseDestination(network + ":" + address)
-		if err != nil {
-			return nil, err
-		}
+	c.dialTCP = func(ctx context.Context, dest v2rayNet.Destination) (net.Conn, error) {
 		unixConn, err := dialer.DialContext(ctx, "unix", path)
 		if err != nil {
 			return nil, err
@@ -88,22 +79,35 @@ func (c *stunClient) UseUDS(path string) {
 
 func (c *stunClient) UseDNSUDS(path string) {
 	dialer := new(net.Dialer)
-	c.resolver.PreferGo = true
-	c.resolver.Dial = func(ctx context.Context, network, _ string) (net.Conn, error) {
+	c.resolve.PreferGo = true
+	c.resolve.Dial = func(ctx context.Context, _, _ string) (net.Conn, error) {
 		return dialer.DialContext(ctx, "unix", path)
 	}
 }
 
 func (c *stunClient) StunNatBehaviorDiscovery(serverAddress string) *StunNatBehaviorDiscoveryResult {
 	result := new(StunNatBehaviorDiscoveryResult)
-	packetConn, err := c.listen(context.Background(), serverAddress)
+	dest, err := v2rayNet.ParseDestination("udp:" + serverAddress)
+	if err != nil {
+		result.Error = err.Error()
+		return result
+	}
+	if dest.Address.Family().IsDomain() {
+		ips, err := c.resolve.LookupIP(context.Background(), "ip", dest.Address.Domain())
+		if err != nil {
+			result.Error = err.Error()
+			return result
+		}
+		dest.Address = v2rayNet.IPAddress(ips[0])
+	}
+	packetConn, err := c.listenUDP(context.Background(), dest)
 	if err != nil {
 		result.Error = err.Error()
 		return result
 	}
 	defer packetConn.Close()
 	client := stun.NewClientWithConnection(packetConn)
-	client.SetServerAddr(serverAddress)
+	client.SetServerAddr(dest.NetAddr())
 	natBehavior, host, err := client.BehaviorTestWithAddress()
 	if err != nil {
 		result.Error = err.Error()
@@ -114,20 +118,36 @@ func (c *stunClient) StunNatBehaviorDiscovery(serverAddress string) *StunNatBeha
 	if natBehavior != nil {
 		result.NatMapping = natBehavior.MappingType.String()
 		result.NatFiltering = natBehavior.FilteringType.String()
+		if natBehavior.NoTranslation {
+			result.NatMapping = natBehavior.NormalType()
+		}
 	}
 	return result
 }
 
 func (c *stunClient) StunNatTypeTest(serverAddress string) *StunNatTypeTestResult {
 	result := new(StunNatTypeTestResult)
-	packetConn, err := c.listen(context.Background(), serverAddress)
+	dest, err := v2rayNet.ParseDestination("udp:" + serverAddress)
+	if err != nil {
+		result.Error = err.Error()
+		return result
+	}
+	if dest.Address.Family().IsDomain() {
+		ips, err := c.resolve.LookupIP(context.Background(), "ip", dest.Address.Domain())
+		if err != nil {
+			result.Error = err.Error()
+			return result
+		}
+		dest.Address = v2rayNet.IPAddress(ips[0])
+	}
+	packetConn, err := c.listenUDP(context.Background(), dest)
 	if err != nil {
 		result.Error = err.Error()
 		return result
 	}
 	defer packetConn.Close()
 	client := stun.NewClientWithConnection(packetConn)
-	client.SetServerAddr(serverAddress)
+	client.SetServerAddr(dest.NetAddr())
 	natType, host, err := client.Discover()
 	if err != nil {
 		result.Error = err.Error()
@@ -143,14 +163,27 @@ func (c *stunClient) StunNatTypeTest(serverAddress string) *StunNatTypeTestResul
 
 func (c *stunClient) StunBinding(serverAddress string) *StunBindingResult {
 	result := new(StunBindingResult)
-	packetConn, err := c.listen(context.Background(), serverAddress)
+	dest, err := v2rayNet.ParseDestination("udp:" + serverAddress)
+	if err != nil {
+		result.Error = err.Error()
+		return result
+	}
+	if dest.Address.Family().IsDomain() {
+		ips, err := c.resolve.LookupIP(context.Background(), "ip", dest.Address.Domain())
+		if err != nil {
+			result.Error = err.Error()
+			return result
+		}
+		dest.Address = v2rayNet.IPAddress(ips[0])
+	}
+	packetConn, err := c.listenUDP(context.Background(), dest)
 	if err != nil {
 		result.Error = err.Error()
 		return result
 	}
 	defer packetConn.Close()
 	client := stun.NewClientWithConnection(packetConn)
-	client.SetServerAddr(serverAddress)
+	client.SetServerAddr(dest.NetAddr())
 	host, err := client.Binding()
 	if err != nil {
 		result.Error = err.Error()
@@ -163,14 +196,27 @@ func (c *stunClient) StunBinding(serverAddress string) *StunBindingResult {
 
 func (c *stunClient) StunTCPBinding(serverAddress string) *StunBindingResult {
 	result := new(StunBindingResult)
-	conn, err := c.dial(context.Background(), serverAddress)
+	dest, err := v2rayNet.ParseDestination("tcp:" + serverAddress)
+	if err != nil {
+		result.Error = err.Error()
+		return result
+	}
+	if dest.Address.Family().IsDomain() {
+		ips, err := c.resolve.LookupIP(context.Background(), "ip", dest.Address.Domain())
+		if err != nil {
+			result.Error = err.Error()
+			return result
+		}
+		dest.Address = v2rayNet.IPAddress(ips[0])
+	}
+	conn, err := c.dialTCP(context.Background(), dest)
 	if err != nil {
 		result.Error = err.Error()
 		return result
 	}
 	defer conn.Close()
 	client := stun.NewClientWithTCPConnection(conn)
-	client.SetServerAddr(serverAddress)
+	client.SetServerAddr(dest.NetAddr())
 	host, err := client.DiscoverTCP()
 	if err != nil {
 		result.Error = err.Error()
@@ -179,36 +225,6 @@ func (c *stunClient) StunTCPBinding(serverAddress string) *StunBindingResult {
 		result.Host = host.String()
 	}
 	return result
-}
-
-func (c *stunClient) listen(ctx context.Context, serverAddress string) (net.PacketConn, error) {
-	addr, port, err := net.SplitHostPort(serverAddress)
-	if err != nil {
-		return nil, err
-	}
-	if _, err := netip.ParseAddr(serverAddress); err != nil {
-		ips, err := c.resolver.LookupIP(ctx, "ip", addr)
-		if err != nil {
-			return nil, err
-		}
-		serverAddress = net.JoinHostPort(ips[0].String(), port)
-	}
-	return c.listener(ctx, "udp", serverAddress)
-}
-
-func (c *stunClient) dial(ctx context.Context, serverAddress string) (net.Conn, error) {
-	addr, port, err := net.SplitHostPort(serverAddress)
-	if err != nil {
-		return nil, err
-	}
-	if _, err := netip.ParseAddr(serverAddress); err != nil {
-		ips, err := c.resolver.LookupIP(ctx, "ip", addr)
-		if err != nil {
-			return nil, err
-		}
-		serverAddress = net.JoinHostPort(ips[0].String(), port)
-	}
-	return c.dialer(ctx, "tcp", serverAddress)
 }
 
 type StunNatBehaviorDiscoveryResult struct {

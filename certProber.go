@@ -98,7 +98,6 @@ func (c *certProber) probeTLS(ctx context.Context, address, sni string, alpn []s
 			return nil, err
 		}
 		conn = newIPCConn(unixConn, dest)
-
 	} else {
 		tcpConn, err := dialer.DialContext(ctx, "tcp", address)
 		if err != nil {
@@ -153,7 +152,7 @@ func (c *certProber) probeQUIC(ctx context.Context, address, sni string, alpn []
 		InsecureSkipVerify: true,
 		NextProtos:         alpn,
 		ServerName:         sni,
-	}, &quic.Config{Versions: []quic.Version{quic.Version1, quic.Version2}})
+	}, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -163,9 +162,7 @@ func (c *certProber) probeQUIC(ctx context.Context, address, sni string, alpn []
 
 func (c *certProber) probe(host string, port int32, sni, alpn string, protocol int) *CertProbeResult {
 	if len(host) == 0 {
-		return &CertProbeResult{
-			Error: "empty host",
-		}
+		return &CertProbeResult{Error: "empty host"}
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -175,8 +172,10 @@ func (c *certProber) probe(host string, port int32, sni, alpn string, protocol i
 		nextProto = strings.Split(alpn, ",")
 	}
 	address := net.JoinHostPort(host, strconv.Itoa(int(port)))
-	var certs []*x509.Certificate
-	var err error
+	var (
+		certs []*x509.Certificate
+		err   error
+	)
 	switch protocol {
 	case certProberProtocolTLS:
 		certs, err = c.probeTLS(ctx, address, sni, nextProto)
@@ -186,25 +185,16 @@ func (c *certProber) probe(host string, port int32, sni, alpn string, protocol i
 		panic("unknown protocol")
 	}
 	if err != nil {
-		return &CertProbeResult{
-			Error: err.Error(),
-		}
+		return &CertProbeResult{Error: err.Error()}
 	}
 	var builder strings.Builder
 	for _, cert := range certs {
-		err = pem.Encode(&builder, &pem.Block{
+		_ = pem.Encode(&builder, &pem.Block{
 			Type:  "CERTIFICATE",
 			Bytes: cert.Raw,
 		})
-		if err != nil {
-			return &CertProbeResult{
-				Error: err.Error(),
-			}
-		}
 	}
-	result := &CertProbeResult{
-		Cert: builder.String(),
-	}
+	result := &CertProbeResult{Cert: builder.String()}
 	opts := x509.VerifyOptions{
 		Intermediates: x509.NewCertPool(),
 	}

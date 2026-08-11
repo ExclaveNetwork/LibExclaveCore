@@ -30,9 +30,10 @@ import (
 type STUNClient interface {
 	UseUDS(path string)
 	UseDNSUDS(path string)
-	StunTest(serverAddress string) *StunResult
-	StunLegacyTest(serverAddress string) *StunLegacyResult
-	StunTCPTest(serverAddress string) *StunTCPResult
+	StunNatBehaviorDiscovery(serverAddress string) *StunNatBehaviorDiscoveryResult
+	StunNatTypeTest(serverAddress string) *StunNatTypeTestResult
+	StunBinding(serverAddress string) *StunBindingResult
+	StunTCPBinding(serverAddress string) *StunBindingResult
 }
 
 var _ STUNClient = (*stunClient)(nil)
@@ -93,8 +94,8 @@ func (c *stunClient) UseDNSUDS(path string) {
 	}
 }
 
-func (c *stunClient) StunTest(serverAddress string) *StunResult {
-	result := new(StunResult)
+func (c *stunClient) StunNatBehaviorDiscovery(serverAddress string) *StunNatBehaviorDiscoveryResult {
+	result := new(StunNatBehaviorDiscoveryResult)
 	packetConn, err := c.listen(context.Background(), serverAddress)
 	if err != nil {
 		result.Error = err.Error()
@@ -117,8 +118,8 @@ func (c *stunClient) StunTest(serverAddress string) *StunResult {
 	return result
 }
 
-func (c *stunClient) StunLegacyTest(serverAddress string) *StunLegacyResult {
-	result := new(StunLegacyResult)
+func (c *stunClient) StunNatTypeTest(serverAddress string) *StunNatTypeTestResult {
+	result := new(StunNatTypeTestResult)
 	packetConn, err := c.listen(context.Background(), serverAddress)
 	if err != nil {
 		result.Error = err.Error()
@@ -140,8 +141,28 @@ func (c *stunClient) StunLegacyTest(serverAddress string) *StunLegacyResult {
 	return result
 }
 
-func (c *stunClient) StunTCPTest(serverAddress string) *StunTCPResult {
-	result := new(StunTCPResult)
+func (c *stunClient) StunBinding(serverAddress string) *StunBindingResult {
+	result := new(StunBindingResult)
+	packetConn, err := c.listen(context.Background(), serverAddress)
+	if err != nil {
+		result.Error = err.Error()
+		return result
+	}
+	defer packetConn.Close()
+	client := stun.NewClientWithConnection(packetConn)
+	client.SetServerAddr(serverAddress)
+	host, err := client.Binding()
+	if err != nil {
+		result.Error = err.Error()
+	}
+	if host != nil {
+		result.Host = host.String()
+	}
+	return result
+}
+
+func (c *stunClient) StunTCPBinding(serverAddress string) *StunBindingResult {
+	result := new(StunBindingResult)
 	conn, err := c.dial(context.Background(), serverAddress)
 	if err != nil {
 		result.Error = err.Error()
@@ -190,20 +211,20 @@ func (c *stunClient) dial(ctx context.Context, serverAddress string) (net.Conn, 
 	return c.dialer(ctx, "tcp", serverAddress)
 }
 
-type StunResult struct {
+type StunNatBehaviorDiscoveryResult struct {
 	NatMapping   string
 	NatFiltering string
 	Host         string
 	Error        string
 }
 
-type StunLegacyResult struct {
+type StunNatTypeTestResult struct {
 	NatType string
 	Host    string
 	Error   string
 }
 
-type StunTCPResult struct {
+type StunBindingResult struct {
 	Host  string
 	Error string
 }

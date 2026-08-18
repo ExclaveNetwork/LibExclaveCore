@@ -4,11 +4,11 @@ go 1.26
 
 require (
 	filippo.io/age v1.3.1
-	github.com/exclavenetwork/exclave-core/v5 v5.50.1-0.20260816112551-16de772c2e81
+	github.com/exclavenetwork/exclave-core/v5 v5.50.1-0.20260818073457-4f604a285894
 	github.com/exclavenetwork/go-stun v0.1.7-0.20260811120819-d09f4628f065
 	github.com/golang/protobuf v1.5.4
 	github.com/quic-go/quic-go v0.61.0
-	golang.org/x/mobile v0.0.0-20260813181013-1960c775504c
+	golang.org/x/mobile v0.0.0-20260816165457-f98cc9b3c733
 	golang.org/x/sys v0.47.0
 	gvisor.dev/gvisor v0.0.0-20250503011706-39ed1f5ac29c
 )
@@ -23,7 +23,7 @@ require (
 	github.com/apernet/quic-go v0.61.1-0.20260806010916-184d081eef3e // indirect
 	github.com/dgryski/go-camellia v0.0.0-20191119043421-69a8a13fb23d // indirect
 	github.com/dgryski/go-metro v0.0.0-20250106013310-edb8663e5e33 // indirect
-	github.com/enfein/mieru/v3 v3.35.0 // indirect
+	github.com/enfein/mieru/v3 v3.36.0 // indirect
 	github.com/exclavenetwork/hysteria/core/v2 v2.12.1-1 // indirect
 	github.com/exclavenetwork/hysteria/extras/v2 v2.12.1-1 // indirect
 	github.com/exclavenetwork/sing-juicity v0.3.0-beta.1 // indirect
@@ -73,7 +73,7 @@ require (
 	golang.org/x/tools v0.49.0 // indirect
 	golang.zx2c4.com/wintun v0.0.0-20230126152724-0fa3db229ce2 // indirect
 	golang.zx2c4.com/wireguard v0.0.0-20260522210424-ecfc5a8d5446 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20260810153831-ec0a7760b754 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20260817212433-ac3dfec99bb1 // indirect
 	google.golang.org/grpc v1.83.0 // indirect
 	google.golang.org/protobuf v1.36.12 // indirect
 	lukechampine.com/blake3 v1.4.1 // indirect

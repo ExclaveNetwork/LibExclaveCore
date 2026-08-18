@@ -22,7 +22,6 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"errors"
-	"fmt"
 	"io"
 	"os"
 	"syscall"
@@ -30,6 +29,16 @@ import (
 
 	"golang.org/x/mobile/asset"
 )
+
+type AndroidCAStore interface {
+	Certificates() ([]byte, error)
+}
+
+var androidCAStore AndroidCAStore
+
+func RegisterAndroidCAStore(store AndroidCAStore) {
+	androidCAStore = store
+}
 
 const (
 	caProviderMozilla = iota
@@ -132,35 +141,17 @@ func setupCustomCAProvider() error {
 }
 
 func setupSystemAndUserCAProvider() error {
-	// inspired by https://github.com/chenxiaolong/RSAF
-	paths := make(map[string]string)
-
-	systemDir := "/apex/com.android.conscrypt/cacerts" // Android 14+
-	entries, err := os.ReadDir(systemDir)
-	if err != nil {
-		systemDir = "/system/etc/security/cacerts"
-		entries, err = os.ReadDir(systemDir)
+	if androidCAStore == nil {
+		return errors.New("androidCAStore not initialized")
 	}
+	der, err := androidCAStore.Certificates()
 	if err != nil {
 		return err
 	}
-	for _, entry := range entries {
-		paths[entry.Name()] = systemDir + "/" + entry.Name()
+	certs, err := x509.ParseCertificates(der)
+	if err != nil {
+		return err
 	}
-
-	userId := os.Getuid() / 100000
-	userDir := fmt.Sprintf("/data/misc/user/%d/cacerts-added", userId)
-	if entries, err = os.ReadDir(userDir); err == nil {
-		for _, entry := range entries {
-			paths[entry.Name()] = userDir + "/" + entry.Name()
-		}
-	}
-	if entries, err = os.ReadDir(fmt.Sprintf("/data/misc/user/%d/cacerts-removed", userId)); err == nil {
-		for _, entry := range entries {
-			delete(paths, entry.Name())
-		}
-	}
-
 	pemFile, err := os.Create(internalAssetsPath + androidIncludedPem) // for plugins
 	if err != nil {
 		return err
@@ -170,47 +161,17 @@ func setupSystemAndUserCAProvider() error {
 		return err
 	}
 	defer syscall.Flock(int(pemFile.Fd()), syscall.LOCK_UN)
-
 	roots := x509.NewCertPool()
-
-	for _, path := range paths {
-		bytes, err := os.ReadFile(path)
-		if err != nil {
+	for _, cert := range certs {
+		block := &pem.Block{
+			Type:  "CERTIFICATE",
+			Bytes: cert.Raw,
+		}
+		if err := pem.Encode(pemFile, block); err != nil {
 			return err
 		}
-		certs, err := x509.ParseCertificates(bytes)
-		if err != nil {
-			var cert *x509.Certificate
-			for len(bytes) > 0 {
-				var block *pem.Block
-				block, bytes = pem.Decode(bytes)
-				if block == nil {
-					break
-				}
-				if block.Type != "CERTIFICATE" || len(block.Headers) != 0 {
-					continue
-				}
-				cert, err = x509.ParseCertificate(block.Bytes)
-				if err == nil {
-					certs = append(certs, cert)
-				}
-			}
-		}
-		if err != nil {
-			return err
-		}
-		for _, cert := range certs {
-			block := &pem.Block{
-				Type:  "CERTIFICATE",
-				Bytes: cert.Raw,
-			}
-			if err := pem.Encode(pemFile, block); err != nil {
-				return err
-			}
-			roots.AddCert(cert)
-		}
+		roots.AddCert(cert)
 	}
-
 	x509.SystemCertPool()
 	systemRoots = roots
 	return nil

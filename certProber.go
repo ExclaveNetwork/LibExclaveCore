@@ -28,9 +28,6 @@ package libexclavecore
 
 import (
 	"context"
-	"crypto/ecdsa"
-	"crypto/ed25519"
-	"crypto/rsa"
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/hex"
@@ -253,21 +250,7 @@ func CertificateToPrettyInfo(input string) (string, error) {
 		certInfo.WriteString("  Signature Algorithm: " + cert.SignatureAlgorithm.String() + "\n\n")
 		certInfo.WriteString("  Signature: " + hex.EncodeToString(cert.Signature) + "\n\n")
 		certInfo.WriteString("  Public Key Algorithm: " + cert.PublicKeyAlgorithm.String() + "\n\n")
-		switch publicKey := cert.PublicKey.(type) {
-		case *rsa.PublicKey:
-			certInfo.WriteString("  Public Key Size: " + strconv.Itoa(publicKey.N.BitLen()) + "\n\n")
-			certInfo.WriteString("  Modulus: " + hex.EncodeToString(publicKey.N.Bytes()) + "\n\n")
-			certInfo.WriteString("  Public Exponent: " + strconv.Itoa(publicKey.E) + "\n\n")
-		case *ecdsa.PublicKey:
-			certInfo.WriteString("  Public Key Size: " + strconv.Itoa(publicKey.Params().BitSize) + "\n\n")
-			ecdhPublicKey, err := publicKey.ECDH()
-			if err != nil {
-				panic(err)
-			}
-			certInfo.WriteString("  Public Key: " + hex.EncodeToString(ecdhPublicKey.Bytes()) + "\n\n")
-		case ed25519.PublicKey:
-			certInfo.WriteString("  Public Key: " + hex.EncodeToString(publicKey) + "\n\n")
-		}
+		publicKeyToString(certInfo, cert.PublicKey)
 		certInfo.WriteString("  Subject: " + cert.Subject.String() + "\n\n")
 		certInfo.WriteString("  Issuer: " + cert.Issuer.String() + "\n\n")
 		certInfo.WriteString("  Subject Key ID: " + hex.EncodeToString(cert.SubjectKeyId) + "\n\n")

@@ -24,10 +24,10 @@ import (
 	"errors"
 	"io"
 	"os"
-	"syscall"
 	_ "unsafe"
 
 	"golang.org/x/mobile/asset"
+	"golang.org/x/sys/unix"
 )
 
 type AndroidCAStore interface {
@@ -93,10 +93,10 @@ func extractOrReadMozillaCAPem() ([]byte, error) {
 		return nil, err
 	}
 	defer pemFile.Close()
-	if err := syscall.Flock(int(pemFile.Fd()), syscall.LOCK_EX); err != nil {
+	if err := unix.Flock(int(pemFile.Fd()), unix.LOCK_EX); err != nil {
 		return nil, err
 	}
-	defer syscall.Flock(int(pemFile.Fd()), syscall.LOCK_UN)
+	defer unix.Flock(int(pemFile.Fd()), unix.LOCK_UN)
 	if b, err := io.ReadAll(pemFile); err == nil && bytes.Equal(b, pemBytes) {
 		return pemBytes, nil
 	}
@@ -157,10 +157,10 @@ func setupSystemAndUserCAProvider() error {
 		return err
 	}
 	defer pemFile.Close()
-	if err := syscall.Flock(int(pemFile.Fd()), syscall.LOCK_EX); err != nil {
+	if err := unix.Flock(int(pemFile.Fd()), unix.LOCK_EX); err != nil {
 		return err
 	}
-	defer syscall.Flock(int(pemFile.Fd()), syscall.LOCK_UN)
+	defer unix.Flock(int(pemFile.Fd()), unix.LOCK_UN)
 	roots := x509.NewCertPool()
 	for _, cert := range certs {
 		block := &pem.Block{

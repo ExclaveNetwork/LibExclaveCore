@@ -28,7 +28,6 @@ import (
 	"strconv"
 	"sync"
 	"sync/atomic"
-	"syscall"
 	"time"
 
 	"github.com/exclavenetwork/exclave-core/v5/app/proxyman/inbound"
@@ -38,12 +37,12 @@ import (
 	"github.com/exclavenetwork/exclave-core/v5/common/session"
 	"github.com/exclavenetwork/exclave-core/v5/common/task"
 	"github.com/exclavenetwork/exclave-core/v5/transport/internet"
-
 	"github.com/exclavenetwork/libexclavecore/common"
 	"github.com/exclavenetwork/libexclavecore/errors"
 	"github.com/exclavenetwork/libexclavecore/gvisor"
 	"github.com/exclavenetwork/libexclavecore/nat"
 	"github.com/exclavenetwork/libexclavecore/tun"
+	"golang.org/x/sys/unix"
 )
 
 var _ tun.Handler = (*Tun2ray)(nil)
@@ -218,7 +217,7 @@ func (t *Tun2ray) NewConnection(source v2rayNet.Destination, destination v2rayNe
 	uidDumper, _ := inbound.GetUidDumper()
 	if uidDumper != nil && (t.dumpUID || t.trafficStats) {
 		var err error
-		uid, err = uidDumper.DumpUid(syscall.IPPROTO_TCP, source.Address.IP().String(), int32(source.Port), destination.Address.IP().String(), int32(destination.Port))
+		uid, err = uidDumper.DumpUid(unix.IPPROTO_TCP, source.Address.IP().String(), int32(source.Port), destination.Address.IP().String(), int32(destination.Port))
 		if err == nil {
 			self = int(uid) == os.Getuid()
 			if !self {
@@ -387,7 +386,7 @@ func (t *Tun2ray) newPacket(queue *writeQueue, source v2rayNet.Destination, dest
 	uidDumper, _ := inbound.GetUidDumper()
 	if uidDumper != nil && (t.dumpUID || t.trafficStats) {
 		var err error
-		uid, err = uidDumper.DumpUid(syscall.IPPROTO_UDP, source.Address.IP().String(), int32(source.Port), destination.Address.IP().String(), int32(destination.Port))
+		uid, err = uidDumper.DumpUid(unix.IPPROTO_UDP, source.Address.IP().String(), int32(source.Port), destination.Address.IP().String(), int32(destination.Port))
 		if err == nil {
 			self = int(uid) == os.Getuid()
 			if !self {

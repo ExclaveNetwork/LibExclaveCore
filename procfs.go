@@ -26,10 +26,10 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-	"syscall"
 	"unsafe"
 
 	"github.com/exclavenetwork/exclave-core/v5/common/net"
+	"golang.org/x/sys/unix"
 )
 
 var (
@@ -49,9 +49,9 @@ func querySocketUidFromProcFs(ipProto int32, srcIP net.IP, srcPort uint16) int32
 	path := "/proc/net/"
 
 	switch ipProto {
-	case syscall.IPPROTO_TCP:
+	case unix.IPPROTO_TCP:
 		path += "tcp"
-	case syscall.IPPROTO_UDP:
+	case unix.IPPROTO_UDP:
 		path += "udp"
 	}
 

@@ -23,7 +23,6 @@ import (
 	"net"
 	"os"
 	"strconv"
-	"syscall"
 
 	"golang.org/x/sys/unix"
 )
@@ -94,19 +93,19 @@ func protectServer(path string, protector Protector) io.Closer {
 }
 
 func protect(path string, fd uintptr) error {
-	socketFd, err := syscall.Socket(syscall.AF_UNIX, syscall.SOCK_STREAM, 0)
+	socketFd, err := unix.Socket(unix.AF_UNIX, unix.SOCK_STREAM, 0)
 	if err != nil {
 		return err
 	}
-	defer syscall.Close(socketFd)
-	if err := syscall.Connect(socketFd, &syscall.SockaddrUnix{Name: path}); err != nil {
+	defer unix.Close(socketFd)
+	if err := unix.Connect(socketFd, &unix.SockaddrUnix{Name: path}); err != nil {
 		return err
 	}
 	msg := []byte{ProtectSuccess}
-	if err := syscall.Sendmsg(socketFd, msg, syscall.UnixRights(int(fd)), nil, 0); err != nil {
+	if err := unix.Sendmsg(socketFd, msg, unix.UnixRights(int(fd)), nil, 0); err != nil {
 		return err
 	}
-	n, err := syscall.Read(socketFd, msg)
+	n, err := unix.Read(socketFd, msg)
 	if err != nil {
 		return err
 	}

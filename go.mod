@@ -1,14 +1,14 @@
 module github.com/exclavenetwork/libexclavecore
 
-go 1.26
+go 1.26.0
 
 require (
 	filippo.io/age v1.3.1
-	github.com/exclavenetwork/exclave-core/v5 v5.50.1-0.20260820131752-43b95cf0096e
+	github.com/exclavenetwork/exclave-core/v5 v5.50.1-0.20260822074201-94b72818c136
 	github.com/exclavenetwork/go-stun v0.1.7-0.20260811120819-d09f4628f065
 	github.com/golang/protobuf v1.5.4
 	github.com/quic-go/quic-go v0.61.0
-	golang.org/x/mobile v0.0.0-20260819173332-ba33198847ac
+	golang.org/x/mobile v0.0.0-20260821190718-4776eadac327
 	golang.org/x/sys v0.47.0
 	gvisor.dev/gvisor v0.0.0-20250503011706-39ed1f5ac29c
 )
@@ -50,7 +50,7 @@ require (
 	github.com/refraction-networking/utls v1.8.3-0.20260802151714-23b1dac19c06 // indirect
 	github.com/riobard/go-bloom v0.0.0-20200614022211-cdc8013cb5b3 // indirect
 	github.com/sagernet/quic-go v0.61.0-sing-box-mod.4 // indirect
-	github.com/sagernet/sing v0.9.0-beta.2 // indirect
+	github.com/sagernet/sing v0.9.0-beta.3 // indirect
 	github.com/sagernet/sing-mux v0.3.5 // indirect
 	github.com/sagernet/sing-quic v0.7.0-beta.2 // indirect
 	github.com/sagernet/sing-shadowsocks v0.2.9 // indirect

@@ -20,25 +20,31 @@ package libexclavecore
 import (
 	"crypto/x509"
 	"encoding/pem"
+	"errors"
 	"strings"
 )
 
 func PemToDer(input string) ([]byte, error) {
 	var der []byte
 	data := []byte(input)
-	for {
-		block, rest := pem.Decode(data)
+	ok := false
+	for len(data) > 0 {
+		var block *pem.Block
+		block, data = pem.Decode(data)
 		if block == nil {
 			break
 		}
-		if block.Type != "CERTIFICATE" {
+		if block.Type != "CERTIFICATE" || len(block.Headers) != 0 {
 			continue
 		}
 		if _, err := x509.ParseCertificate(block.Bytes); err != nil {
-			return nil, err
+			continue
 		}
 		der = append(der, block.Bytes...)
-		data = rest
+		ok = true
+	}
+	if !ok {
+		return nil, errors.New("invalid certificate")
 	}
 	return der, nil
 }

@@ -29,9 +29,7 @@ import (
 	"golang.org/x/sys/unix"
 )
 
-var (
-	_ internet.SystemDialer = (*protectedDialer)(nil)
-)
+var _ internet.SystemDialer = (*protectedDialer)(nil)
 
 type Protector interface {
 	Protect(fd int32) bool

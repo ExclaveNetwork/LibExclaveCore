@@ -88,7 +88,7 @@ func extractOrReadMozillaCAPem() ([]byte, error) {
 		return nil, err
 	}
 	pemInternal.Close()
-	pemFile, err := os.OpenFile(internalAssetsPath+mozillaIncludedPem, os.O_RDWR|os.O_CREATE, 0644)
+	pemFile, err := os.OpenFile(internalAssetsPath+mozillaIncludedPem, os.O_RDWR|os.O_CREATE, 0o644)
 	if err != nil {
 		return nil, err
 	}

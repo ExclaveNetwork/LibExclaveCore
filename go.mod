@@ -4,10 +4,10 @@ go 1.26.0
 
 require (
 	filippo.io/age v1.3.2
-	github.com/exclavenetwork/exclave-core/v5 v5.50.1-0.20260922114328-5f7b6a108876
+	github.com/exclavenetwork/exclave-core/v5 v5.50.1-0.20260922180629-51ca1d75d612
 	github.com/exclavenetwork/go-stun v0.1.7-0.20260811120819-d09f4628f065
 	github.com/golang/protobuf v1.5.4
-	github.com/quic-go/quic-go v0.62.0
+	github.com/quic-go/quic-go v0.63.0
 	golang.org/x/mobile v0.0.0-20260908204917-8b95e45f8d3e
 	golang.org/x/sys v0.48.0
 	gvisor.dev/gvisor v0.0.0-20250503011706-39ed1f5ac29c
@@ -26,6 +26,7 @@ require (
 	github.com/enfein/mieru/v3 v3.37.0 // indirect
 	github.com/exclavenetwork/hysteria/core/v2 v2.12.3-1 // indirect
 	github.com/exclavenetwork/hysteria/extras/v2 v2.12.3-1 // indirect
+	github.com/exclavenetwork/reality v0.0.0-20260921174136-96fe685b8ce9 // indirect
 	github.com/exclavenetwork/sing-juicity v0.3.0 // indirect
 	github.com/exclavenetwork/sing-shadowquic v0.0.0-20260904152941-03a261e772e4 // indirect
 	github.com/gofrs/uuid/v5 v5.5.1 // indirect

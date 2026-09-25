@@ -4,7 +4,7 @@ go 1.26.0
 
 require (
 	filippo.io/age v1.3.2
-	github.com/exclavenetwork/exclave-core/v5 v5.50.1-0.20260922180629-51ca1d75d612
+	github.com/exclavenetwork/exclave-core/v5 v5.50.1-0.20260925132258-4195910660aa
 	github.com/exclavenetwork/go-stun v0.1.7-0.20260811120819-d09f4628f065
 	github.com/golang/protobuf v1.5.4
 	github.com/quic-go/quic-go v0.63.0
@@ -15,15 +15,15 @@ require (
 
 require (
 	filippo.io/hpke v0.4.0 // indirect
-	filippo.io/mldsa v0.0.0-20260711112038-ff3f469cee29 // indirect
+	filippo.io/mldsa v1.0.0 // indirect
 	github.com/adrg/xdg v0.5.3 // indirect
 	github.com/aead/chacha20 v0.0.0-20180709150244-8b13a72661da // indirect
-	github.com/andybalholm/brotli v1.2.4 // indirect
+	github.com/andybalholm/brotli v1.2.5 // indirect
 	github.com/anytls/sing-anytls v0.0.13 // indirect
 	github.com/apernet/quic-go v0.62.1-0.20260912175848-73339f7edbb9 // indirect
 	github.com/dgryski/go-camellia v0.0.0-20191119043421-69a8a13fb23d // indirect
 	github.com/dgryski/go-metro v0.0.0-20250106013310-edb8663e5e33 // indirect
-	github.com/enfein/mieru/v3 v3.37.0 // indirect
+	github.com/enfein/mieru/v3 v3.38.0 // indirect
 	github.com/exclavenetwork/hysteria/core/v2 v2.12.3-1 // indirect
 	github.com/exclavenetwork/hysteria/extras/v2 v2.12.3-1 // indirect
 	github.com/exclavenetwork/reality v0.0.0-20260921174136-96fe685b8ce9 // indirect
@@ -34,7 +34,7 @@ require (
 	github.com/google/btree v1.1.3 // indirect
 	github.com/gorilla/websocket v1.5.3 // indirect
 	github.com/hashicorp/yamux v0.1.2 // indirect
-	github.com/klauspost/compress v1.20.0 // indirect
+	github.com/klauspost/compress v1.20.1 // indirect
 	github.com/klauspost/cpuid/v2 v2.4.0 // indirect
 	github.com/lunixbochs/struc v0.0.0-20241101090106-8d528fa2c543 // indirect
 	github.com/metacubex/cpu v0.1.1 // indirect
@@ -48,7 +48,7 @@ require (
 	github.com/miekg/dns v1.1.73 // indirect
 	github.com/pires/go-proxyproto v0.15.0 // indirect
 	github.com/quic-go/qpack v0.6.0 // indirect
-	github.com/refraction-networking/utls v1.8.3-0.20260802151714-23b1dac19c06 // indirect
+	github.com/refraction-networking/utls v1.8.3-0.20260924071514-88ba76ae4ee3 // indirect
 	github.com/riobard/go-bloom v0.0.0-20200614022211-cdc8013cb5b3 // indirect
 	github.com/sagernet/quic-go v0.61.0-sing-box-mod.7 // indirect
 	github.com/sagernet/sing v0.9.5 // indirect

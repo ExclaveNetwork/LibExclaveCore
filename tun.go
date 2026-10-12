@@ -24,8 +24,6 @@ import (
 	"net"
 	"net/netip"
 	"os"
-	"path/filepath"
-	"strconv"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -39,7 +37,6 @@ import (
 	"github.com/exclavenetwork/exclave-core/v5/transport/internet"
 	"github.com/exclavenetwork/libexclavecore/common"
 	"github.com/exclavenetwork/libexclavecore/errors"
-	"github.com/exclavenetwork/libexclavecore/gvisor"
 	"github.com/exclavenetwork/libexclavecore/nat"
 	"github.com/exclavenetwork/libexclavecore/tun"
 	"golang.org/x/sys/unix"
@@ -132,21 +129,11 @@ func NewTun2ray(config *TunConfig) (*Tun2ray, error) {
 	var err error
 	switch config.Implementation {
 	case common.TunImplementationGVisor:
-		var pcapFile *os.File
 		if config.PCap {
-			timestamp := time.Now().Unix()
-			path := externalAssetsPath + "pcap/" + strconv.FormatInt(timestamp, 10) + ".pcap"
-			err = os.MkdirAll(filepath.Dir(path), 0o755)
-			if err != nil {
-				return nil, err
-			}
-			pcapFile, err = os.Create(path)
-			if err != nil {
-				return nil, err
-			}
+			newError("pcap capture is not available with the sing-tun go stack, ignoring").AtWarning().WriteToLog()
 		}
 
-		t.dev, err = gvisor.New(config.FileDescriptor, config.MTU, t, pcapFile, config.EnableIPv6, config.DiscardICMP, discardIPv6Func)
+		t.dev, err = newSingTun(config, t, discardIPv6Func)
 	case common.TunImplementationSystem:
 		t.dev, err = nat.New(config.FileDescriptor, config.MTU, t, t.addr4, t.addr6, config.EnableIPv6, config.DiscardICMP, discardIPv6Func)
 	}
@@ -298,6 +285,15 @@ func (t *Tun2ray) NewConnection(source v2rayNet.Destination, destination v2rayNe
 	proxyConn, err := t.v2ray.dial(ctx, destination)
 	if err != nil {
 		newError(err).AtError().WriteToLog(errors.ExportIDToError(ctx))
+		if handshakeConn, isHandshakeConn := conn.(interface {
+			HandshakeFailure(error) error
+		}); isHandshakeConn {
+			_ = handshakeConn.HandshakeFailure(err)
+		}
+		common.CloseIgnore(conn)
+		t.connectionsLock.Lock()
+		t.connections.Remove(elem)
+		t.connectionsLock.Unlock()
 		return
 	}
 	defer common.CloseIgnore(proxyConn)

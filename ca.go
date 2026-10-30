@@ -20,7 +20,6 @@ package libexclavecore
 import (
 	"bytes"
 	"crypto/x509"
-	"encoding/pem"
 	"errors"
 	"io"
 	"os"
@@ -144,11 +143,7 @@ func setupSystemAndUserCAProvider() error {
 	if androidCAStore == nil {
 		return errors.New("androidCAStore not initialized")
 	}
-	der, err := androidCAStore.Certificates()
-	if err != nil {
-		return err
-	}
-	certs, err := x509.ParseCertificates(der)
+	pemBytes, err := androidCAStore.Certificates()
 	if err != nil {
 		return err
 	}
@@ -161,16 +156,13 @@ func setupSystemAndUserCAProvider() error {
 		return err
 	}
 	defer unix.Flock(int(pemFile.Fd()), unix.LOCK_UN)
+	_, err = pemFile.Write(pemBytes)
+	if err != nil {
+		return err
+	}
 	roots := x509.NewCertPool()
-	for _, cert := range certs {
-		block := &pem.Block{
-			Type:  "CERTIFICATE",
-			Bytes: cert.Raw,
-		}
-		if err := pem.Encode(pemFile, block); err != nil {
-			return err
-		}
-		roots.AddCert(cert)
+	if !roots.AppendCertsFromPEM(pemBytes) {
+		return errors.New("failed to append certificates from pem")
 	}
 	x509.SystemCertPool()
 	systemRoots = roots

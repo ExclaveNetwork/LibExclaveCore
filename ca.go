@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2021 by nekohasekai <contact-sagernet@sekai.icu>
+Copyright (C) 2026  dyhkwong
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -18,7 +18,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 package libexclavecore
 
 import (
-	"bytes"
 	"crypto/x509"
 	"errors"
 	"io"
@@ -26,7 +25,6 @@ import (
 	_ "unsafe"
 
 	"golang.org/x/mobile/asset"
-	"golang.org/x/sys/unix"
 )
 
 type AndroidCAStore interface {
@@ -41,130 +39,53 @@ func RegisterAndroidCAStore(store AndroidCAStore) {
 
 const (
 	caProviderMozilla = iota
-	caProviderSystem
-	caProviderSystemAndUser // for https://github.com/golang/go/issues/71258
+	caProviderGo
+	caProviderAndroid
 	caProviderCustom
-)
-
-const (
-	mozillaIncludedPem = "mozilla_included.pem"
-	androidIncludedPem = "android_included.pem"
-	customPem          = "root_store.certs"
 )
 
 //go:linkname systemRoots crypto/x509.systemRoots
 var systemRoots *x509.CertPool
 
 func UpdateSystemRoots(caProvider int32) (err error) {
+	defer func() {
+		if err != nil {
+			systemRoots = x509.NewCertPool()
+		}
+	}()
+	if caProvider == caProviderGo {
+		// can't linkname crypto/x509 initSystemRoots(), do nothing
+		return
+	}
+	x509.SystemCertPool() // crypto/x509 once.Do(initSystemRoots)
+	var b []byte
 	switch caProvider {
-	case caProviderSystem:
 	case caProviderMozilla:
-		err = setupMozillaCAProvider()
+		var file asset.File
+		file, err = asset.Open("mozilla_included.pem")
+		if err != nil {
+			return
+		}
+		b, err = io.ReadAll(file)
+		file.Close()
+	case caProviderAndroid:
+		if androidCAStore == nil {
+			err = errors.New("androidCAStore not initialized")
+			return
+		}
+		b, err = androidCAStore.Certificates()
 	case caProviderCustom:
-		err = setupCustomCAProvider()
-	case caProviderSystemAndUser:
-		err = setupSystemAndUserCAProvider()
+		b, err = os.ReadFile(externalAssetsPath + "root_store.certs")
 	default:
 		panic("unknown root store provider")
 	}
 	if err != nil {
-		x509.SystemCertPool() // crypto/x509 once.Do(initSystemRoots)
-		systemRoots = x509.NewCertPool()
-		return err
+		return
 	}
-	return nil
-}
-
-func extractOrReadMozillaCAPem() ([]byte, error) {
-	pemInternal, err := asset.Open(mozillaIncludedPem)
-	if err != nil {
-		pemInternal.Close()
-		return nil, err
+	if pool := x509.NewCertPool(); pool.AppendCertsFromPEM(b) {
+		systemRoots = pool
+	} else {
+		err = errors.New("failed to append certificates from pem")
 	}
-	pemBytes, err := io.ReadAll(pemInternal)
-	if err != nil {
-		pemInternal.Close()
-		return nil, err
-	}
-	pemInternal.Close()
-	pemFile, err := os.OpenFile(internalAssetsPath+mozillaIncludedPem, os.O_RDWR|os.O_CREATE, 0o644)
-	if err != nil {
-		return nil, err
-	}
-	defer pemFile.Close()
-	if err := unix.Flock(int(pemFile.Fd()), unix.LOCK_EX); err != nil {
-		return nil, err
-	}
-	defer unix.Flock(int(pemFile.Fd()), unix.LOCK_UN)
-	if b, err := io.ReadAll(pemFile); err == nil && bytes.Equal(b, pemBytes) {
-		return pemBytes, nil
-	}
-	if err := pemFile.Truncate(0); err != nil {
-		return nil, err
-	}
-	if _, err := pemFile.Seek(0, io.SeekStart); err != nil {
-		return nil, err
-	}
-	if _, err := pemFile.Write(pemBytes); err != nil {
-		return nil, err
-	}
-	return pemBytes, nil
-}
-
-func setupMozillaCAProvider() error {
-	pemBytes, err := extractOrReadMozillaCAPem()
-	if err != nil {
-		return err
-	}
-	roots := x509.NewCertPool()
-	if !roots.AppendCertsFromPEM(pemBytes) {
-		return errors.New("failed to append certificates from pem")
-	}
-	x509.SystemCertPool()
-	systemRoots = roots
-	return nil
-}
-
-func setupCustomCAProvider() error {
-	pemBytes, err := os.ReadFile(externalAssetsPath + customPem)
-	if err != nil {
-		return err
-	}
-	roots := x509.NewCertPool()
-	if !roots.AppendCertsFromPEM(pemBytes) {
-		return errors.New("failed to append certificates from pem")
-	}
-	x509.SystemCertPool()
-	systemRoots = roots
-	return nil
-}
-
-func setupSystemAndUserCAProvider() error {
-	if androidCAStore == nil {
-		return errors.New("androidCAStore not initialized")
-	}
-	pemBytes, err := androidCAStore.Certificates()
-	if err != nil {
-		return err
-	}
-	pemFile, err := os.Create(internalAssetsPath + androidIncludedPem) // for plugins
-	if err != nil {
-		return err
-	}
-	defer pemFile.Close()
-	if err := unix.Flock(int(pemFile.Fd()), unix.LOCK_EX); err != nil {
-		return err
-	}
-	defer unix.Flock(int(pemFile.Fd()), unix.LOCK_UN)
-	_, err = pemFile.Write(pemBytes)
-	if err != nil {
-		return err
-	}
-	roots := x509.NewCertPool()
-	if !roots.AppendCertsFromPEM(pemBytes) {
-		return errors.New("failed to append certificates from pem")
-	}
-	x509.SystemCertPool()
-	systemRoots = roots
-	return nil
+	return
 }

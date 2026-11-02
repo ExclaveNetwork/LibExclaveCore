@@ -27,26 +27,17 @@ import (
 	"golang.org/x/mobile/asset"
 )
 
-var (
-	assetsPrefix       string
-	internalAssetsPath string
-	externalAssetsPath string
-)
+var externalAssetsPath string
 
-func InitializeV2Ray(internalAssets string, externalAssets string, prefix string) {
-	assetsPrefix = prefix
-	internalAssetsPath = internalAssets
+func InitializeV2Ray(externalAssets string, prefix string) {
 	externalAssetsPath = externalAssets
 
 	fileSeeker := func(path string) (io.ReadSeekCloser, error) {
 		_, fileName := filepath.Split(path)
-		if _, err := os.Stat(externalAssetsPath + fileName); err == nil {
-			return os.Open(externalAssetsPath + fileName)
+		if _, err := os.Stat(externalAssets + fileName); err == nil {
+			return os.Open(externalAssets + fileName)
 		}
-		if _, err := os.Stat(internalAssetsPath + fileName); err == nil {
-			return os.Open(internalAssetsPath + fileName)
-		}
-		if file, err := asset.Open(assetsPrefix + fileName); err == nil {
+		if file, err := asset.Open(prefix + fileName); err == nil {
 			return file, nil
 		}
 		return nil, errors.New("asset " + fileName + " not found")

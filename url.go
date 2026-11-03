@@ -23,8 +23,6 @@ import (
 	"strconv"
 	"strings"
 	_ "unsafe"
-
-	"github.com/exclavenetwork/exclave-core/v5/common/errors"
 )
 
 type URL interface {
@@ -94,13 +92,13 @@ func ParseURL(rawURL string) (URL, error) {
 	if err != nil {
 		return nil, err
 	}
-	if strings.Contains(u.Hostname(), ":") && !IsIPv6(u.Hostname()) {
+	/*if strings.Contains(u.Hostname(), ":") && !IsIPv6(u.Hostname()) {
 		// https://github.com/golang/go/issues/75223
 		// https://github.com/golang/go/issues/75859
 		// https://github.com/golang/go/issues/78077
 		// https://github.com/golang/go/issues/78945
 		return nil, errors.New("non-IPv6 hostname contains colons")
-	}
+	}*/
 	return &netURL{URL: u}, nil
 }
 

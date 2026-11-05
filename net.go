@@ -22,7 +22,6 @@ import (
 	"net"
 	"net/netip"
 	"strconv"
-	"strings"
 )
 
 func IsIP(input string) bool {
@@ -73,9 +72,9 @@ func SplitHostPort(str string) (*HostPort, error) {
 	if err != nil {
 		return nil, err
 	}
-	if strings.Contains(host, ":") && !IsIPv6(host) {
+	/*if strings.Contains(host, ":") && !IsIPv6(host) {
 		return nil, errors.New("non-IPv6 hostname contains colons")
-	}
+	}*/
 	return &HostPort{
 		Host: host,
 		Port: int32(port),

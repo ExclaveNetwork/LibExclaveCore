@@ -217,6 +217,7 @@ func (instance *V2RayInstance) Close() error {
 	if instance.closed {
 		return errors.New("instance closed")
 	}
+	instance.closed = true
 	if instance.started {
 		instance.core.Close()
 		instance.core = nil

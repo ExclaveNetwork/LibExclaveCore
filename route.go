@@ -18,8 +18,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 package libexclavecore
 
 import (
+	"github.com/exclavenetwork/exclave-core/v5/app/proxyman"
 	"github.com/exclavenetwork/exclave-core/v5/app/proxyman/inbound"
-	"github.com/exclavenetwork/exclave-core/v5/app/proxyman/outbound"
 	"github.com/exclavenetwork/exclave-core/v5/common/net"
 )
 
@@ -58,7 +58,7 @@ func SetSSID(ssid string) {
 }
 
 func InterfaceUpdate() {
-	outbound.InterfaceUpdate()
+	proxyman.InterfaceUpdate()
 }
 
 var discardIPv6 bool

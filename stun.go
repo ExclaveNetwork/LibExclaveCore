@@ -108,14 +108,14 @@ func (c *stunClient) StunNatBehaviorDiscovery(serverAddress string) *StunNatBeha
 	defer packetConn.Close()
 	client := stun.NewClientWithConnection(packetConn)
 	client.SetServerAddr(dest.NetAddr())
-	natBehavior, host, err := client.BehaviorTestWithAddress()
+	natBehavior, err := client.BehaviorTestWithDetails()
 	if err != nil {
 		result.Error = err.Error()
 	}
-	if host != nil {
-		result.Host = host.String()
-	}
 	if natBehavior != nil {
+		if natBehavior.MappedAddress != nil {
+			result.Host = natBehavior.MappedAddress.String()
+		}
 		result.NatMapping = natBehavior.MappingType.String()
 		result.NatFiltering = natBehavior.FilteringType.String()
 		if natBehavior.NoTranslation {

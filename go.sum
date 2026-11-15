@@ -60,8 +60,8 @@ github.com/enfein/mieru/v3 v3.39.0 h1:22WJN9i7I4FrY1cTAVp5KfKOFm4sWrXVOXhqf5fkdr
 github.com/enfein/mieru/v3 v3.39.0/go.mod h1:zJBUCsi5rxyvHM8fjFf+GLaEl4OEjjBXr1s5F6Qd3hM=
 github.com/exclavenetwork/exclave-core/v5 v5.50.1-0.20261110162258-2fc8bc67ba79 h1:TG0v6LbBLYNlYXxwWYOXoI1Y5BoNS8VxFv4CEHT4Pwc=
 github.com/exclavenetwork/exclave-core/v5 v5.50.1-0.20261110162258-2fc8bc67ba79/go.mod h1:Y/suyNL5P+l4I2Yiq2nAtZD82LnW/UScJJE+hcj1BJk=
-github.com/exclavenetwork/go-stun v0.1.7-0.20260811120819-d09f4628f065 h1:ZAtO0tq9eSEphwM8m6DwIvm1fphmgcR+ZjNfGINuQq0=
-github.com/exclavenetwork/go-stun v0.1.7-0.20260811120819-d09f4628f065/go.mod h1:ObmiKQNMk51Fks7eGBg1scssRkcoCs25W0UHDjeYavk=
+github.com/exclavenetwork/go-stun v0.1.7-0.20261116063833-c0f093f1db98 h1:cAS3lyHLOWyetmtcO6AMTnGTKgqhec5+kjfqHixuh1I=
+github.com/exclavenetwork/go-stun v0.1.7-0.20261116063833-c0f093f1db98/go.mod h1:ObmiKQNMk51Fks7eGBg1scssRkcoCs25W0UHDjeYavk=
 github.com/exclavenetwork/hysteria/core/v2 v2.13.0-1 h1:uPdWKF/ox2CrWtSXQPPi7qWtPNjX9dQxO+cicEZJXMM=
 github.com/exclavenetwork/hysteria/core/v2 v2.13.0-1/go.mod h1:GsUJWcwuhJCk8HKG2UEfxddfUzja1maH9IEik4hl6hQ=
 github.com/exclavenetwork/hysteria/extras/v2 v2.13.0-1 h1:slr8b5Zxzj8I1XbW376hZYShfzHu/oIgoIkAsqPPTiY=

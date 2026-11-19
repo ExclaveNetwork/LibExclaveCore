@@ -4,7 +4,7 @@ go 1.27
 
 require (
 	filippo.io/age v1.3.2
-	github.com/exclavenetwork/exclave-core/v5 v5.50.1-0.20261118063317-6be05824cd60
+	github.com/exclavenetwork/exclave-core/v5 v5.50.1-0.20261119163058-81fe39892a9f
 	github.com/exclavenetwork/go-stun v0.1.7-0.20261116063833-c0f093f1db98
 	github.com/golang/protobuf v1.5.4
 	github.com/quic-go/quic-go v0.65.0
@@ -76,7 +76,7 @@ require (
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260817212433-ac3dfec99bb1 // indirect
 	google.golang.org/grpc v1.85.0 // indirect
 	google.golang.org/protobuf v1.36.12 // indirect
-	lukechampine.com/blake3 v1.4.1 // indirect
+	lukechampine.com/blake3 v1.5.0 // indirect
 )
 
 // workaround https://github.com/google/gvisor/commit/868dfbce4fd59f03145e2bc5ac0b585917c371fa

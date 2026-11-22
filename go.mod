@@ -4,7 +4,7 @@ go 1.27
 
 require (
 	filippo.io/age v1.3.2
-	github.com/exclavenetwork/exclave-core/v5 v5.50.1-0.20261119163058-81fe39892a9f
+	github.com/exclavenetwork/exclave-core/v5 v5.50.1-0.20261122080535-d6131795980a
 	github.com/exclavenetwork/go-stun v0.1.7-0.20261116063833-c0f093f1db98
 	github.com/golang/protobuf v1.5.4
 	github.com/quic-go/quic-go v0.65.0
@@ -33,7 +33,7 @@ require (
 	github.com/google/btree v1.1.3 // indirect
 	github.com/gorilla/websocket v1.5.3 // indirect
 	github.com/hashicorp/yamux v0.1.2 // indirect
-	github.com/klauspost/compress v1.20.4 // indirect
+	github.com/klauspost/compress v1.20.5 // indirect
 	github.com/klauspost/cpuid/v2 v2.4.2 // indirect
 	github.com/lunixbochs/struc v0.0.0-20241101090106-8d528fa2c543 // indirect
 	github.com/metacubex/cpu v0.1.2 // indirect
@@ -48,8 +48,9 @@ require (
 	github.com/molecule-man/go-brrr v1.3.1 // indirect
 	github.com/pion/transport/v5 v5.1.5 // indirect
 	github.com/pires/go-proxyproto v0.16.0 // indirect
+	github.com/puzpuzpuz/xsync/v4 v4.5.0 // indirect
 	github.com/quic-go/qpack v0.6.0 // indirect
-	github.com/refraction-networking/utls v1.8.3-0.20261108164504-a13c59ffe98b // indirect
+	github.com/refraction-networking/utls v1.8.3-0.20261118233537-360383f893fb // indirect
 	github.com/riobard/go-bloom v0.0.0-20200614022211-cdc8013cb5b3 // indirect
 	github.com/sagernet/quic-go v0.61.0-sing-box-mod.14 // indirect
 	github.com/sagernet/sing v0.9.6 // indirect
@@ -63,7 +64,7 @@ require (
 	github.com/v2fly/BrowserBridge v0.0.0-20210430233438-0570fc1d7d08 // indirect
 	github.com/v2fly/ss-bloomring v0.0.0-20210312155135-28617310f63e // indirect
 	github.com/v2fly/struc v0.0.0-20241227015403-8e8fa1badfd6 // indirect
-	github.com/xtaci/smux v1.5.60 // indirect
+	github.com/xtaci/smux v1.5.61 // indirect
 	github.com/yosida95/uritemplate/v3 v3.0.2 // indirect
 	go4.org/netipx v0.0.0-20260823151212-3075585bcbeb // indirect
 	golang.org/x/crypto v0.59.0 // indirect
@@ -76,7 +77,7 @@ require (
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260817212433-ac3dfec99bb1 // indirect
 	google.golang.org/grpc v1.85.0 // indirect
 	google.golang.org/protobuf v1.36.12 // indirect
-	lukechampine.com/blake3 v1.5.0 // indirect
+	lukechampine.com/blake3 v1.5.1 // indirect
 )
 
 // workaround https://github.com/google/gvisor/commit/868dfbce4fd59f03145e2bc5ac0b585917c371fa
